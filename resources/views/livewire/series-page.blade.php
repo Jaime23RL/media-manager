@@ -60,7 +60,7 @@
                                     <div class="flex-shrink-0 h-12 w-12 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center">
                                         @if(isset($serie['tmdb']) && $serie['tmdb'])
                                             @if($serie['missing_count'] === 0)
-                                                <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="h-6 w-6 text-green-600 dark:text-green-400 space-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             @else

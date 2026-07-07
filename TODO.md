@@ -2,6 +2,9 @@
 
 ## Pending
 
+- [ ] Install Laravel Boost for AI guidelines (Livewire, Flux, Tailwind best practices)
+  - `composer require laravel/boost --dev`
+  - `php artisan boost:install`
 - [ ] Configure qBittorrent-nox as systemd service (daemon)
   - Install `qbittorrent-nox`
   - Create service at `/etc/systemd/system/qbittorrent.service`
@@ -30,3 +33,5 @@
 - [x] Filter future episodes as 'upcoming' (no false warnings)
 - [x] Local files grouped by season before TMDB lookup
 - [x] SeriesPage lookup saves per-series cache for instant detail view
+- [x] TMDB state persisted in animes.json (permanent across reloads)
+- [x] UI padding improved in series list
