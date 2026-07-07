@@ -78,15 +78,19 @@
                                         <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
                                             {{ $serie['name'] }}
                                         </div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ $serie['file_count'] }} files
-                                            @if(isset($serie['tmdb']) && $serie['tmdb'])
-                                                <span class="mx-1">·</span>
-                                                <span class="{{ $serie['missing_count'] === 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400' }}">
-                                                    {{ $serie['have_count'] }}/{{ $serie['total_episodes'] }} episodes
-                                                </span>
-                                            @endif
-                                        </div>
+                                         <div class="text-sm text-gray-500 dark:text-gray-400">
+                                             {{ $serie['file_count'] }} files
+                                             @if(isset($serie['tmdb']) && $serie['tmdb'])
+                                                 <span class="mx-1">·</span>
+                                                 <span class="{{ $serie['missing_count'] === 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400' }}">
+                                                     {{ $serie['have_count'] }}/{{ $serie['total_episodes'] }} episodes
+                                                 </span>
+                                                 @if(isset($serie['upcoming_count']) && $serie['upcoming_count'] > 0)
+                                                     <span class="mx-1">·</span>
+                                                     <span class="text-blue-500 dark:text-blue-400">{{ $serie['upcoming_count'] }} upcoming</span>
+                                                 @endif
+                                             @endif
+                                         </div>
                                     </div>
                                 </div>
                                 <div class="ml-4 flex-shrink-0">

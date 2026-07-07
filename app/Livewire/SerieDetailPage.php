@@ -6,6 +6,7 @@ use App\Services\CompareService;
 use App\Services\NamingService;
 use App\Services\ScannerService;
 use App\Services\TmdbService;
+use Illuminate\Support\Facades\File;
 use Livewire\Component;
 
 class SerieDetailPage extends Component
@@ -20,12 +21,15 @@ class SerieDetailPage extends Component
 
     public $episodesBySeason = [];
 
+    public $localFilesBySeason = [];
+
     public $loading = false;
 
     public function mount($id): void
     {
         $this->id = $id;
         $this->loadSerie();
+        $this->loadFromCache();
     }
 
     public function loadSerie(): void
@@ -38,6 +42,101 @@ class SerieDetailPage extends Component
         }
 
         $this->serie = $data['series'][$this->id];
+        $this->groupLocalFiles();
+    }
+
+    /**
+     * Group local files by season using NamingService.
+     */
+    private function groupLocalFiles(): void
+    {
+        if (! $this->serie) {
+            return;
+        }
+
+        $namingService = app(NamingService::class);
+
+        foreach ($this->serie['files'] as $file) {
+            $parsed = $namingService->parse($file);
+            $season = $parsed ? $parsed['season'] : 0;
+            $episode = $parsed ? $parsed['episode'] : null;
+
+            $this->localFilesBySeason[$season][] = [
+                'filename' => $file,
+                'episode' => $episode,
+                'parsed' => $parsed !== null,
+            ];
+        }
+
+        ksort($this->localFilesBySeason);
+    }
+
+    /**
+     * Load cached TMDB lookup if available.
+     */
+    private function loadFromCache(): void
+    {
+        $cachePath = $this->getCachePath();
+
+        if (! file_exists($cachePath)) {
+            return;
+        }
+
+        $content = file_get_contents($cachePath);
+        $cached = json_decode($content, true);
+
+        if (! $cached) {
+            return;
+        }
+
+        $this->tmdb = $cached['tmdb'] ?? null;
+        $this->comparison = $cached['comparison'] ?? null;
+        $this->episodesBySeason = $cached['episodes_by_season'] ?? [];
+    }
+
+    /**
+     * Save TMDB lookup results to cache.
+     */
+    private function saveToCache(): void
+    {
+        $cacheDir = config('media.cache_path');
+
+        if (! File::isDirectory($cacheDir)) {
+            File::makeDirectory($cacheDir, 0755, true);
+        }
+
+        $data = [
+            'tmdb' => $this->tmdb,
+            'comparison' => $this->comparison,
+            'episodes_by_season' => $this->episodesBySeason,
+            'cached_at' => now()->toISOString(),
+        ];
+
+        file_put_contents($this->getCachePath(), json_encode($data, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Get cache file path for this series.
+     */
+    private function getCachePath(): string
+    {
+        return config('media.cache_path').'/serie_'.md5($this->serie['name'] ?? $this->id).'.json';
+    }
+
+    /**
+     * Clear cached TMDB data for this series.
+     */
+    public function clearCache(): void
+    {
+        $path = $this->getCachePath();
+
+        if (file_exists($path)) {
+            unlink($path);
+        }
+
+        $this->tmdb = null;
+        $this->comparison = null;
+        $this->episodesBySeason = [];
     }
 
     public function lookupTmdb(): void
@@ -77,11 +176,14 @@ class SerieDetailPage extends Component
         // Group episodes by season for display
         $this->episodesBySeason = $this->groupEpisodes($tmdbEpisodes, $this->comparison);
 
+        // Persist to cache
+        $this->saveToCache();
+
         $this->loading = false;
     }
 
     /**
-     * Group TMDB episodes by season, marking each as have/missing.
+     * Group TMDB episodes by season, marking each as have/missing/upcoming.
      */
     private function groupEpisodes(array $tmdbEpisodes, array $comparison): array
     {
@@ -95,16 +197,24 @@ class SerieDetailPage extends Component
             $missingMap[$ep['season']][$ep['episode']] = $ep;
         }
 
+        $upcomingMap = [];
+        foreach ($comparison['upcoming'] as $ep) {
+            $upcomingMap[$ep['season']][$ep['episode']] = $ep;
+        }
+
         $grouped = [];
         foreach ($tmdbEpisodes as $ep) {
             $season = $ep['season'];
             $episode = $ep['episode'];
 
-            $status = 'missing';
+            $status = 'upcoming';
             $filename = null;
+
             if (isset($haveMap[$season][$episode])) {
                 $status = 'have';
                 $filename = $haveMap[$season][$episode]['filename'];
+            } elseif (isset($missingMap[$season][$episode])) {
+                $status = 'missing';
             }
 
             $grouped[$season][] = [

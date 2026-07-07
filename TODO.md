@@ -25,3 +25,7 @@
 - [x] Create CompareService (local vs TMDB comparison)
 - [x] Implement SeriesPage with TMDB lookup and episode status
 - [x] Implement SerieDetailPage with episodes by season
+- [x] Accordion UI for episodes grouped by season
+- [x] TMDB lookup results persisted to cache
+- [x] Filter future episodes as 'upcoming' (no false warnings)
+- [x] Local files grouped by season before TMDB lookup

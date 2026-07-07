@@ -54,6 +54,7 @@ class SeriesPage extends Component
                 $episodes = $tmdb->getAllEpisodes($tmdbInfo['tmdb_id']);
                 $missing = 0;
                 $have = 0;
+                $upcoming = 0;
 
                 // Quick count without full comparison
                 $parsedEpisodes = [];
@@ -64,17 +65,24 @@ class SeriesPage extends Component
                     }
                 }
 
+                $today = date('Y-m-d');
                 foreach ($episodes as $ep) {
                     if (isset($parsedEpisodes[$ep['season']][$ep['episode']])) {
                         $have++;
                     } else {
-                        $missing++;
+                        $airDate = $ep['air_date'] ?? null;
+                        if ($airDate && $airDate > $today) {
+                            $upcoming++;
+                        } else {
+                            $missing++;
+                        }
                     }
                 }
 
                 $serie['total_episodes'] = count($episodes);
                 $serie['have_count'] = $have;
                 $serie['missing_count'] = $missing;
+                $serie['upcoming_count'] = $upcoming;
             }
         }
         unset($serie);

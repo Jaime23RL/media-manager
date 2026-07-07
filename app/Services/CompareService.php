@@ -54,16 +54,27 @@ class CompareService
         }
 
         // Find what's missing (TMDB has it, local doesn't)
+        // Episodes with air_date in the future are marked as 'upcoming' instead
         $missing = [];
+        $upcoming = [];
+        $today = date('Y-m-d');
+
         foreach ($tmdbLookup as $season => $episodes) {
             foreach ($episodes as $episode => $epData) {
                 if (! isset($localEpisodes[$season][$episode])) {
-                    $missing[] = [
+                    $entry = [
                         'season' => $season,
                         'episode' => $episode,
                         'name' => $epData['name'] ?? '',
                         'air_date' => $epData['air_date'] ?? null,
                     ];
+
+                    $airDate = $epData['air_date'] ?? null;
+                    if ($airDate && $airDate > $today) {
+                        $upcoming[] = $entry;
+                    } else {
+                        $missing[] = $entry;
+                    }
                 }
             }
         }
@@ -71,10 +82,12 @@ class CompareService
         // Sort results
         usort($have, fn ($a, $b) => $a['season'] <=> $b['season'] ?: $a['episode'] <=> $b['episode']);
         usort($missing, fn ($a, $b) => $a['season'] <=> $b['season'] ?: $a['episode'] <=> $b['episode']);
+        usort($upcoming, fn ($a, $b) => $a['season'] <=> $b['season'] ?: $a['episode'] <=> $b['episode']);
 
         return [
             'have' => $have,
             'missing' => $missing,
+            'upcoming' => $upcoming,
             'unparseable' => $unparseable,
         ];
     }
