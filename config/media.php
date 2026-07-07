@@ -4,11 +4,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Rutas de la librería multimedia
+    | Media Library Paths
     |--------------------------------------------------------------------------
     |
-    | Estas son las rutas base donde se encuentran tus series y películas.
-    | El scanner va a recorrer estas carpetas buscando archivos de video.
+    | Base paths where your series and movies are stored.
+    | The scanner will traverse these folders looking for video files.
     |
     */
 
@@ -19,11 +19,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Extensiones de video válidas
+    | Valid Video Extensions
     |--------------------------------------------------------------------------
     |
-    | El scanner solo va a detectar archivos con estas extensiones.
-    | Si tienes archivos en otros formatos, añádelos aquí.
+    | The scanner will only detect files with these extensions.
+    | Add more formats here if needed.
     |
     */
 
@@ -31,11 +31,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | TMDB
+    | TMDB (The Movie Database)
     |--------------------------------------------------------------------------
     |
-    | Configuración de la API de The Movie Database.
-    | Necesitas registrarte en https://www.themoviedb.org para obtener una API key.
+    | Configuration for the TMDB API.
+    | Register at https://www.themoviedb.org to obtain an API key.
     |
     */
 
@@ -50,8 +50,8 @@ return [
     | qBittorrent
     |--------------------------------------------------------------------------
     |
-    | Configuración de conexión con qBittorrent Web UI.
-    | Por defecto corre en http://localhost:8080.
+    | Connection settings for qBittorrent Web UI.
+    | Default: http://localhost:8080
     |
     */
 
@@ -63,11 +63,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cache de TMDB
+    | TMDB Cache
     |--------------------------------------------------------------------------
     |
-    | Directorio donde se guardan las respuestas de TMDB en JSON.
-    | Esto evita hacer llamadas a la API cada vez que abres la app.
+    | Directory where TMDB API responses are stored as JSON.
+    | This avoids making API calls every time the app is opened.
     |
     */
 

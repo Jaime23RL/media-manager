@@ -1,21 +1,23 @@
 # TODO - Media Manager
 
-## Pendiente
+## Pending
 
-- [ ] Configurar qBittorrent-nox como servicio systemd (daemon)
-  - Instalar `qbittorrent-nox`
-  - Crear servicio en `/etc/systemd/system/qbittorrent.service`
-  - Activar e iniciar con `systemctl enable --now qbittorrent`
-  - Beneficio: arranca al inicio, corre en segundo interfaz, WebUI para gestionar descargas
+- [ ] Configure qBittorrent-nox as systemd service (daemon)
+  - Install `qbittorrent-nox`
+  - Create service at `/etc/systemd/system/qbittorrent.service`
+  - Enable and start with `systemctl enable --now qbittorrent`
+  - Benefit: starts on boot, runs in background, WebUI for managing downloads
 
-## Completado
+## Completed
 
-- [x] Configurar qBittorrent WebUI (puerto 23552, usuario admin)
-- [x] Configurar config/media.php con rutas de media
-- [x] Configurar .env con TMDB_API_KEY, QBITTORRENT_*, MEDIA_*
-- [x] Configurar rutas en web.php
-- [x] Crear ScannerService (escaneo de carpetas)
-- [x] Crear NamingService (parseo de nombres de archivos)
-- [x] Crear componente Livewire ScanPage + vista
-- [x] Crear componentes stub (SeriesPage, SerieDetailPage, DownloadsPage, SettingsPage)
-- [x] Verificar escaneo: 5 series, 103 archivos detectados
+- [x] Configure qBittorrent WebUI (port 23552, user admin)
+- [x] Configure config/media.php with media paths
+- [x] Configure .env with TMDB_API_KEY, QBITTORRENT_*, MEDIA_*
+- [x] Configure routes in web.php
+- [x] Create ScannerService (folder scanning)
+- [x] Create NamingService (filename parsing)
+- [x] Create Livewire ScanPage component + view
+- [x] Create stub components (SeriesPage, SerieDetailPage, DownloadsPage, SettingsPage)
+- [x] Verify scan: 5 series, 103 files detected
+- [x] Persist scan results to JSON (storage/app/cache/local/)
+- [x] Translate all comments and UI to English

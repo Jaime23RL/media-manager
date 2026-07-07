@@ -7,9 +7,7 @@ use Illuminate\Support\Facades\File;
 class ScannerService
 {
     /**
-     * Escanea las carpetas de media y retorna series encontradas.
-     *
-     * @return array
+     * Scan media folders and return found series.
      */
     public function scan(): array
     {
@@ -17,13 +15,13 @@ class ScannerService
         $videoExtensions = config('media.video_extensions');
         $series = [];
 
-        // Escanear cada ruta configurada (Animes, Películas)
+        // Scan each configured path (Animes, Movies)
         foreach ($paths as $type => $path) {
-            if (!File::isDirectory($path)) {
+            if (! File::isDirectory($path)) {
                 continue;
             }
 
-            // Obtener subcarpetas (cada carpeta = una serie)
+            // Get subdirectories (each folder = one series)
             $directories = File::directories($path);
 
             foreach ($directories as $directory) {
@@ -46,17 +44,13 @@ class ScannerService
     }
 
     /**
-     * Obtiene archivos de video de un directorio (recursivo).
-     *
-     * @param string $directory
-     * @param array $extensions
-     * @return array
+     * Get video files from a directory (recursive).
      */
     private function getVideoFiles(string $directory, array $extensions): array
     {
         $files = [];
 
-        // Buscar archivos en el directorio actual
+        // Check files in current directory
         $items = File::files($directory);
 
         foreach ($items as $item) {
@@ -65,7 +59,7 @@ class ScannerService
             }
         }
 
-        // Buscar en subcarpetas (ej: Season 1, Season 2)
+        // Check subdirectories (e.g., Season 1, Season 2)
         $subdirectories = File::directories($directory);
 
         foreach ($subdirectories as $subdirectory) {
@@ -73,7 +67,7 @@ class ScannerService
 
             foreach ($subFiles as $file) {
                 if (in_array(strtolower($file->getExtension()), $extensions)) {
-                    $files[] = basename($subdirectory) . '/' . $file->getFilename();
+                    $files[] = basename($subdirectory).'/'.$file->getFilename();
                 }
             }
         }
@@ -81,5 +75,60 @@ class ScannerService
         sort($files);
 
         return $files;
+    }
+
+    /**
+     * Save scan results to a JSON file.
+     *
+     * @param  string  $type  'animes' or 'peliculas'
+     */
+    public function saveScan(array $series, string $type): void
+    {
+        $cachePath = storage_path('app/cache/local');
+
+        if (! File::isDirectory($cachePath)) {
+            File::makeDirectory($cachePath, 0755, true);
+        }
+
+        $data = [
+            'scanned_at' => now()->toISOString(),
+            'path' => config("media.paths.{$type}"),
+            'series' => $series,
+        ];
+
+        $filePath = $cachePath.'/'.$type.'.json';
+        file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Load previously scanned results from JSON file.
+     *
+     * @param  string  $type  'animes' or 'peliculas'
+     */
+    public function loadScan(string $type): ?array
+    {
+        $filePath = storage_path("app/cache/local/{$type}.json");
+
+        if (! file_exists($filePath)) {
+            return null;
+        }
+
+        $content = file_get_contents($filePath);
+        $data = json_decode($content, true);
+
+        return $data ?? null;
+    }
+
+    /**
+     * Get the timestamp of the last scan.
+     *
+     * @param  string  $type  'animes' or 'peliculas'
+     * @return string|null ISO timestamp or null if no scan exists
+     */
+    public function getLastScanTime(string $type): ?string
+    {
+        $data = $this->loadScan($type);
+
+        return $data['scanned_at'] ?? null;
     }
 }
