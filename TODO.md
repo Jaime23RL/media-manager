@@ -21,3 +21,7 @@
 - [x] Verify scan: 5 series, 103 files detected
 - [x] Persist scan results to JSON (storage/app/cache/local/)
 - [x] Translate all comments and UI to English
+- [x] Create TmdbService (search, get details, get seasons, cache)
+- [x] Create CompareService (local vs TMDB comparison)
+- [x] Implement SeriesPage with TMDB lookup and episode status
+- [x] Implement SerieDetailPage with episodes by season
