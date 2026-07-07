@@ -25,7 +25,7 @@
         </div>
     @else
         {{-- Action buttons --}}
-        <div class="mb-6 flex items-center gap-4">
+        <div class="mb-8 flex items-center gap-4">
             <button
                 wire:click="lookupTmdb"
                 wire:loading.attr="disabled"
@@ -53,7 +53,7 @@
         <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
             <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($series as $index => $serie)
-                    <li class="px-5 py-5 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <li class="px-6 py-6 hover:bg-gray-50 dark:hover:bg-gray-700">
                         <a href="{{ route('series.show', $index) }}" wire:navigate class="block">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center min-w-0">
