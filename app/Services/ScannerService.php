@@ -131,4 +131,25 @@ class ScannerService
 
         return $data['scanned_at'] ?? null;
     }
+
+    /**
+     * Update a single series in the scan cache with TMDB data.
+     *
+     * @param  string  $type  'animes' or 'peliculas'
+     * @param  int  $index  Series index in the array
+     * @param  array  $enrichedData  Series data with TMDB fields
+     */
+    public function updateSerie(string $type, int $index, array $enrichedData): void
+    {
+        $data = $this->loadScan($type);
+
+        if (! $data || ! isset($data['series'][$index])) {
+            return;
+        }
+
+        $data['series'][$index] = array_merge($data['series'][$index], $enrichedData);
+
+        $filePath = storage_path("app/cache/local/{$type}.json");
+        file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT));
+    }
 }

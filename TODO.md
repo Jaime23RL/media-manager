@@ -29,3 +29,4 @@
 - [x] TMDB lookup results persisted to cache
 - [x] Filter future episodes as 'upcoming' (no false warnings)
 - [x] Local files grouped by season before TMDB lookup
+- [x] SeriesPage lookup saves per-series cache for instant detail view

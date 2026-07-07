@@ -46,9 +46,10 @@ class SeriesPage extends Component
         $tmdb = app(TmdbService::class);
         $namingService = app(NamingService::class);
         $compareService = app(CompareService::class);
+        $scanner = app(ScannerService::class);
         $today = date('Y-m-d');
 
-        foreach ($this->series as &$serie) {
+        foreach ($this->series as $index => &$serie) {
             $normalizedName = $namingService->normalizeSerieName($serie['name']);
             $searchResult = $tmdb->searchTv($normalizedName);
 
@@ -83,6 +84,15 @@ class SeriesPage extends Component
 
             // Save per-series cache so SerieDetailPage loads instantly
             $this->saveSerieCache($serie['name'], $tmdbInfo, $comparison, $episodesBySeason);
+
+            // Persist TMDB data to animes.json so it's permanent
+            $scanner->updateSerie('animes', $index, [
+                'tmdb' => $tmdbInfo,
+                'total_episodes' => count($tmdbEpisodes),
+                'have_count' => count($comparison['have']),
+                'missing_count' => count($comparison['missing']),
+                'upcoming_count' => count($comparison['upcoming']),
+            ]);
         }
         unset($serie);
 
