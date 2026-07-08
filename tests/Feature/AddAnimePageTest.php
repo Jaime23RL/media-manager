@@ -61,10 +61,12 @@ class AddAnimePageTest extends TestCase
             'poster_path' => null,
         ])
             ->set('folderName', 'Test')
+            ->set('nameSuggestions', [['name' => 'Test', 'label' => 'English']])
             ->call('backToResults');
 
         $component->assertSet('selectedSerie', null);
         $component->assertSet('folderName', '');
+        $component->assertSet('nameSuggestions', []);
         $component->assertSet('seasons', []);
     }
 
@@ -75,6 +77,7 @@ class AddAnimePageTest extends TestCase
         $component->set('searchQuery', 'Code Geass')
             ->set('results', [['id' => 1, 'name' => 'Code Geass', 'poster_path' => null]])
             ->set('selectedSerie', ['tmdb_id' => 1, 'name' => 'Code Geass', 'poster_path' => null])
+            ->set('nameSuggestions', [['name' => 'Code Geass', 'label' => 'English']])
             ->set('created', true)
             ->call('resetSearch');
 

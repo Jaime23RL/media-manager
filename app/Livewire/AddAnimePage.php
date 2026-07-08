@@ -17,6 +17,10 @@ class AddAnimePage extends Component
 
     public string $folderName = '';
 
+    public array $nameSuggestions = [];
+
+    public string $selectedNameOption = '';
+
     public array $seasons = [];
 
     public array $selectedSeasons = [];
@@ -74,7 +78,60 @@ class AddAnimePage extends Component
             'first_air_date' => $details['first_air_date'] ?? null,
         ];
 
-        $this->folderName = $this->selectedSerie['name'];
+        // Build name suggestions from main name + alternative titles
+        $this->nameSuggestions = [];
+        $seen = [];
+
+        // English name (from TMDB)
+        $englishName = $this->selectedSerie['name'];
+        if ($englishName !== '') {
+            $this->nameSuggestions[] = [
+                'name' => $englishName,
+                'label' => 'English',
+            ];
+            $seen[strtolower($englishName)] = true;
+        }
+
+        // Original name (may be Japanese)
+        $originalName = $this->selectedSerie['original_name'];
+        if ($originalName !== '' && ! isset($seen[strtolower($originalName)])) {
+            $this->nameSuggestions[] = [
+                'name' => $originalName,
+                'label' => 'Original',
+            ];
+            $seen[strtolower($originalName)] = true;
+        }
+
+        // Alternative titles from TMDB
+        $altTitles = $tmdb->getAlternativeTitles($tmdbId);
+        foreach ($altTitles as $alt) {
+            $title = $alt['title'] ?? '';
+            $lang = $alt['language'] ?? '';
+            $iso = $alt['iso_3166_1'] ?? '';
+
+            if ($title === '' || isset($seen[strtolower($title)])) {
+                continue;
+            }
+
+            $seen[strtolower($title)] = true;
+
+            $label = match (true) {
+                $lang === 'ja' => 'Japanese',
+                $iso === 'JP' => 'Japanese',
+                $lang === 'en' => 'English',
+                $iso === 'US' || $iso === 'GB' => 'English',
+                default => strtoupper($iso ?: $lang),
+            };
+
+            $this->nameSuggestions[] = [
+                'name' => $title,
+                'label' => $label,
+            ];
+        }
+
+        // Default to English name
+        $this->folderName = $englishName;
+        $this->selectedNameOption = $englishName;
 
         // Process seasons
         $this->seasons = [];
@@ -107,6 +164,15 @@ class AddAnimePage extends Component
         usort($this->seasons, fn ($a, $b) => $a['number'] <=> $b['number']);
 
         $this->loading = false;
+    }
+
+    /**
+     * Handle name option selection.
+     */
+    public function selectNameOption(string $name): void
+    {
+        $this->selectedNameOption = $name;
+        $this->folderName = $name;
     }
 
     public function createFolders(): void
@@ -146,6 +212,8 @@ class AddAnimePage extends Component
     {
         $this->selectedSerie = null;
         $this->folderName = '';
+        $this->nameSuggestions = [];
+        $this->selectedNameOption = '';
         $this->seasons = [];
         $this->selectedSeasons = [];
     }
@@ -156,6 +224,8 @@ class AddAnimePage extends Component
         $this->results = [];
         $this->selectedSerie = null;
         $this->folderName = '';
+        $this->nameSuggestions = [];
+        $this->selectedNameOption = '';
         $this->seasons = [];
         $this->selectedSeasons = [];
         $this->created = false;

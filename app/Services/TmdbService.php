@@ -108,6 +108,23 @@ class TmdbService
     }
 
     /**
+     * Get alternative titles for a TV series.
+     *
+     * @return array List of ['iso_3166_1', 'title', 'language']
+     */
+    public function getAlternativeTitles(int $tmdbId): array
+    {
+        $response = Http::withToken($this->apiKey)
+            ->get("{$this->baseUrl}/tv/{$tmdbId}/alternative_titles");
+
+        if ($response->failed()) {
+            return [];
+        }
+
+        return $response->json('titles', []);
+    }
+
+    /**
      * Get all episodes for a series (across all seasons).
      *
      * @return array Flattened list of episodes [['season' => 1, 'episode' => 1, 'name' => '...'], ...]

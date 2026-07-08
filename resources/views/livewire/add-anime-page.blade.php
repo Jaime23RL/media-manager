@@ -65,10 +65,40 @@
 
             {{-- Folder name --}}
             <div class="mb-6">
-                <label for="folderName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Folder name</label>
-                <input type="text" id="folderName" wire:model="folderName"
-                       class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" />
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Folder name</label>
+
+                {{-- Name suggestions --}}
+                @if(count($nameSuggestions) > 0)
+                    <div class="space-y-1.5 mb-3">
+                        @foreach($nameSuggestions as $suggestion)
+                            <label class="flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedNameOption === $suggestion['name'] ? 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }} hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors">
+                                <input type="radio" wire:click="selectNameOption('{{ addslashes($suggestion['name']) }}')"
+                                       {{ $selectedNameOption === $suggestion['name'] ? 'checked' : '' }}
+                                       class="border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500" />
+                                <div class="flex-1 min-w-0">
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $suggestion['name'] }}</span>
+                                </div>
+                                <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{{ $suggestion['label'] }}</span>
+                            </label>
+                        @endforeach
+
+                        {{-- Custom name option --}}
+                        <label class="flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedNameOption === 'custom' ? 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }} hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors">
+                            <input type="radio" wire:click="selectNameOption('custom')"
+                                   {{ $selectedNameOption === 'custom' ? 'checked' : '' }}
+                                   class="border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500" />
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Custom name</span>
+                        </label>
+                    </div>
+                @endif
+
+                {{-- Custom name input --}}
+                @if($selectedNameOption === 'custom' || count($nameSuggestions) === 0)
+                    <input type="text" wire:model="folderName"
+                           class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" />
+                @endif
+
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                     {{ config('media.paths.animes') }}/{{ $folderName }}
                 </p>
             </div>
