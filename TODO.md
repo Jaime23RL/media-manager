@@ -34,3 +34,4 @@
 - [x] TMDB state persisted in animes.json (permanent across reloads)
 - [x] UI padding improved in series list
 - [x] Create season folders from SerieDetailPage (missing seasons)
+- [x] Add Anime page - search TMDB and create folder structure

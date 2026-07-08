@@ -30,12 +30,18 @@ class TmdbService
      */
     public function searchTv(string $query): ?array
     {
-        $cacheKey = 'search_'.md5($query);
-        $cached = $this->getFromCache($cacheKey);
-        if ($cached !== null) {
-            return $cached;
-        }
+        $results = $this->searchTvAll($query);
 
+        return $results[0] ?? null;
+    }
+
+    /**
+     * Search for a TV series by name and return all results.
+     *
+     * @return array List of matching results
+     */
+    public function searchTvAll(string $query): array
+    {
         $response = Http::withToken($this->apiKey)
             ->get("{$this->baseUrl}/search/tv", [
                 'query' => $query,
@@ -43,17 +49,10 @@ class TmdbService
             ]);
 
         if ($response->failed()) {
-            return null;
+            return [];
         }
 
-        $results = $response->json('results', []);
-
-        $first = $results[0] ?? null;
-        if ($first) {
-            $this->saveToCache($cacheKey, $first);
-        }
-
-        return $first;
+        return $response->json('results', []);
     }
 
     /**

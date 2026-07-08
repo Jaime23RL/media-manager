@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\AddAnimePage;
 use App\Livewire\DownloadsPage;
 use App\Livewire\ScanPage;
 use App\Livewire\SerieDetailPage;
@@ -14,6 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Media Manager
     Route::get('/scan', ScanPage::class)->name('scan');
+    Route::get('/add-anime', AddAnimePage::class)->name('add-anime');
     Route::get('/series', SeriesPage::class)->name('series');
     Route::get('/series/{id}', SerieDetailPage::class)->name('series.show');
     Route::get('/downloads', DownloadsPage::class)->name('downloads');

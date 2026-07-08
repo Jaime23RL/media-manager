@@ -20,6 +20,10 @@
                         {{ __('Scanner') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="plus-circle" :href="route('add-anime')" :current="request()->routeIs('add-anime')" wire:navigate>
+                        {{ __('Add Anime') }}
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="tv" :href="route('series')" :current="request()->routeIs('series') || request()->routeIs('series.show')" wire:navigate>
                         {{ __('Series') }}
                     </flux:sidebar.item>
