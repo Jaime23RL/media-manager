@@ -17,6 +17,22 @@
             </p>
         </div>
     @else
+        {{-- Flash message --}}
+        @if($seasonCreatedMessage)
+            <div class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-sm text-green-700 dark:text-green-300">{{ $seasonCreatedMessage }}</span>
+                </div>
+                <button wire:click="$set('seasonCreatedMessage', '')" type="button" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        @endif
         {{-- Header --}}
         <div class="mb-6 flex items-start justify-between">
             <div>
@@ -106,11 +122,26 @@
 
         {{-- Episodes by Season (TMDB comparison) --}}
         @if(count($episodesBySeason) > 0)
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Episodes</h3>
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Episodes</h3>
+                @if(count($this->getMissingSeasons()) > 1)
+                    <button
+                        wire:click="createAllMissingSeasons"
+                        type="button"
+                        class="inline-flex items-center px-3 py-1.5 border border-dashed border-gray-400 dark:border-gray-500 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:border-gray-600 dark:hover:border-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+                    >
+                        <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Create all missing seasons
+                    </button>
+                @endif
+            </div>
             @foreach($episodesBySeason as $season => $episodes)
                 @php
                     $haveCount = collect($episodes)->where('status', 'have')->count();
                     $totalCount = count($episodes);
+                    $folderExists = $this->seasonFolderExists($season);
                 @endphp
                 <div class="mb-4" x-data="{ open: {{ $haveCount < $totalCount ? 'true' : 'false' }} }">
                     {{-- Season header --}}
@@ -147,6 +178,26 @@
                         x-collapse
                         class="mt-2 bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg"
                     >
+                        @if(! $folderExists)
+                            <div class="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Season {{ $season }} directory is missing</span>
+                                </div>
+                                <button
+                                    wire:click="createSeasonFolder({{ $season }})"
+                                    type="button"
+                                    class="inline-flex items-center px-3 py-1 border border-amber-400 dark:border-amber-500 rounded text-sm font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-800/50 transition-colors"
+                                >
+                                    <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Create folder
+                                </button>
+                            </div>
+                        @endif
                         <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($episodes as $ep)
                                 <li class="px-4 py-3 {{ $ep['status'] === 'have' ? 'bg-green-50 dark:bg-green-900/10' : ($ep['status'] === 'upcoming' ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-amber-50 dark:bg-amber-900/10') }}">

@@ -2,9 +2,6 @@
 
 ## Pending
 
-- [ ] Install Laravel Boost for AI guidelines (Livewire, Flux, Tailwind best practices)
-  - `composer require laravel/boost --dev`
-  - `php artisan boost:install`
 - [ ] Configure qBittorrent-nox as systemd service (daemon)
   - Install `qbittorrent-nox`
   - Create service at `/etc/systemd/system/qbittorrent.service`
@@ -13,6 +10,7 @@
 
 ## Completed
 
+- [x] Install Laravel Boost for AI guidelines (Livewire, Flux, Tailwind best practices)
 - [x] Configure qBittorrent WebUI (port 23552, user admin)
 - [x] Configure config/media.php with media paths
 - [x] Configure .env with TMDB_API_KEY, QBITTORRENT_*, MEDIA_*
@@ -35,3 +33,4 @@
 - [x] SeriesPage lookup saves per-series cache for instant detail view
 - [x] TMDB state persisted in animes.json (permanent across reloads)
 - [x] UI padding improved in series list
+- [x] Create season folders from SerieDetailPage (missing seasons)

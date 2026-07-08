@@ -152,4 +152,27 @@ class ScannerService
         $filePath = storage_path("app/cache/local/{$type}.json");
         file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT));
     }
+
+    /**
+     * Create a season folder inside a series directory.
+     *
+     * @return bool true if created, false if already exists or invalid path
+     */
+    public function createSeasonFolder(string $seriesPath, int $seasonNumber): bool
+    {
+        if (! File::isDirectory($seriesPath)) {
+            return false;
+        }
+
+        $folderName = 'Season '.$seasonNumber;
+        $seasonPath = $seriesPath.'/'.$folderName;
+
+        if (File::isDirectory($seasonPath)) {
+            return false;
+        }
+
+        File::makeDirectory($seasonPath, 0755, true);
+
+        return true;
+    }
 }

@@ -25,6 +25,10 @@ class SerieDetailPage extends Component
 
     public $loading = false;
 
+    public string $seasonCreatedMessage = '';
+
+    public array $existingSeasonFolders = [];
+
     public function mount($id): void
     {
         $this->id = $id;
@@ -42,7 +46,38 @@ class SerieDetailPage extends Component
         }
 
         $this->serie = $data['series'][$this->id];
+        $this->loadExistingSeasonFolders();
         $this->groupLocalFiles();
+    }
+
+    /**
+     * Detect which Season X directories exist on disk.
+     */
+    private function loadExistingSeasonFolders(): void
+    {
+        $this->existingSeasonFolders = [];
+
+        if (! $this->serie || ! isset($this->serie['path']) || ! File::isDirectory($this->serie['path'])) {
+            return;
+        }
+
+        foreach (File::directories($this->serie['path']) as $directory) {
+            $folderName = basename($directory);
+
+            if (preg_match('/^Season\s+(\d+)$/i', $folderName, $matches)) {
+                $this->existingSeasonFolders[] = (int) $matches[1];
+            }
+        }
+
+        sort($this->existingSeasonFolders);
+    }
+
+    /**
+     * Check if a season folder exists on disk.
+     */
+    public function seasonFolderExists(int $season): bool
+    {
+        return in_array($season, $this->existingSeasonFolders);
     }
 
     /**
@@ -229,6 +264,84 @@ class SerieDetailPage extends Component
         ksort($grouped);
 
         return $grouped;
+    }
+
+    /**
+     * Get seasons where the directory doesn't exist on disk.
+     */
+    public function getMissingSeasons(): array
+    {
+        if (! $this->episodesBySeason) {
+            return [];
+        }
+
+        $missingSeasons = [];
+
+        foreach ($this->episodesBySeason as $season => $episodes) {
+            if ($season == 0) {
+                continue;
+            }
+
+            if (! $this->seasonFolderExists($season)) {
+                $missingSeasons[] = $season;
+            }
+        }
+
+        return $missingSeasons;
+    }
+
+    /**
+     * Create a season folder for the given season number.
+     */
+    public function createSeasonFolder(int $season): void
+    {
+        if (! $this->serie || ! isset($this->serie['path'])) {
+            return;
+        }
+
+        $scanner = app(ScannerService::class);
+        $created = $scanner->createSeasonFolder($this->serie['path'], $season);
+
+        if ($created) {
+            $this->seasonCreatedMessage = "Season {$season} folder created";
+
+            // Refresh local files to show the new empty season folder
+            $this->loadSerie();
+        } else {
+            $this->seasonCreatedMessage = "Season {$season} folder already exists";
+        }
+    }
+
+    /**
+     * Create all missing season folders at once.
+     */
+    public function createAllMissingSeasons(): void
+    {
+        if (! $this->serie || ! isset($this->serie['path'])) {
+            return;
+        }
+
+        $missingSeasons = $this->getMissingSeasons();
+
+        if (empty($missingSeasons)) {
+            return;
+        }
+
+        $scanner = app(ScannerService::class);
+        $createdCount = 0;
+
+        foreach ($missingSeasons as $season) {
+            if ($scanner->createSeasonFolder($this->serie['path'], $season)) {
+                $createdCount++;
+            }
+        }
+
+        if ($createdCount > 0) {
+            $this->seasonCreatedMessage = "{$createdCount} season folder(s) created";
+            $this->loadSerie();
+        } else {
+            $this->seasonCreatedMessage = 'All season folders already exist';
+        }
     }
 
     public function render()
