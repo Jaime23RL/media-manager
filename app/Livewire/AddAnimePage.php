@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Services\JikanService;
 use App\Services\ScannerService;
 use App\Services\TmdbService;
 use Illuminate\Support\Facades\File;
@@ -78,7 +79,7 @@ class AddAnimePage extends Component
             'first_air_date' => $details['first_air_date'] ?? null,
         ];
 
-        // Build name suggestions from main name + alternative titles
+        // Build name suggestions from main name + alternative titles + Jikan romaji
         $this->nameSuggestions = [];
         $seen = [];
 
@@ -92,12 +93,37 @@ class AddAnimePage extends Component
             $seen[strtolower($englishName)] = true;
         }
 
-        // Original name (may be Japanese)
+        // Search Jikan for romaji
+        $jikan = app(JikanService::class);
+        $jikanResult = $jikan->searchByName($this->selectedSerie['name']);
+
+        if ($jikanResult) {
+            $romaji = $jikanResult['title'] ?? '';
+            if ($romaji !== '' && ! isset($seen[strtolower($romaji)])) {
+                $this->nameSuggestions[] = [
+                    'name' => $romaji,
+                    'label' => 'Romaji',
+                ];
+                $seen[strtolower($romaji)] = true;
+            }
+
+            // Also check Jikan's English title if different
+            $jikanEnglish = $jikanResult['title_english'] ?? '';
+            if ($jikanEnglish !== '' && ! isset($seen[strtolower($jikanEnglish)])) {
+                $this->nameSuggestions[] = [
+                    'name' => $jikanEnglish,
+                    'label' => 'English (MAL)',
+                ];
+                $seen[strtolower($jikanEnglish)] = true;
+            }
+        }
+
+        // Original name (Japanese characters from TMDB)
         $originalName = $this->selectedSerie['original_name'];
         if ($originalName !== '' && ! isset($seen[strtolower($originalName)])) {
             $this->nameSuggestions[] = [
                 'name' => $originalName,
-                'label' => 'Original',
+                'label' => 'Japanese',
             ];
             $seen[strtolower($originalName)] = true;
         }
@@ -173,6 +199,16 @@ class AddAnimePage extends Component
     {
         $this->selectedNameOption = $name;
         $this->folderName = $name;
+    }
+
+    /**
+     * Update folder name when selected name option changes.
+     */
+    public function updatedSelectedNameOption(string $value): void
+    {
+        if ($value !== 'custom') {
+            $this->folderName = $value;
+        }
     }
 
     public function createFolders(): void

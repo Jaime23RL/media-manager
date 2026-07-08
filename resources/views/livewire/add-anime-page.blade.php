@@ -72,8 +72,8 @@
                     <div class="space-y-1.5 mb-3">
                         @foreach($nameSuggestions as $suggestion)
                             <label class="flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedNameOption === $suggestion['name'] ? 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }} hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors">
-                                <input type="radio" wire:click="selectNameOption('{{ addslashes($suggestion['name']) }}')"
-                                       {{ $selectedNameOption === $suggestion['name'] ? 'checked' : '' }}
+                                <input type="radio" name="folder_name" value="{{ $suggestion['name'] }}"
+                                       wire:model.live="selectedNameOption"
                                        class="border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500" />
                                 <div class="flex-1 min-w-0">
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $suggestion['name'] }}</span>
@@ -84,8 +84,8 @@
 
                         {{-- Custom name option --}}
                         <label class="flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedNameOption === 'custom' ? 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }} hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors">
-                            <input type="radio" wire:click="selectNameOption('custom')"
-                                   {{ $selectedNameOption === 'custom' ? 'checked' : '' }}
+                            <input type="radio" name="folder_name" value="custom"
+                                   wire:model.live="selectedNameOption"
                                    class="border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500" />
                             <span class="text-sm font-medium text-gray-900 dark:text-white">Custom name</span>
                         </label>
@@ -94,8 +94,8 @@
 
                 {{-- Custom name input --}}
                 @if($selectedNameOption === 'custom' || count($nameSuggestions) === 0)
-                    <input type="text" wire:model="folderName"
-                           class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" />
+                    <input type="text" wire:model="folderName" placeholder="Enter custom folder name..."
+                           class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 text-base px-4 py-3" />
                 @endif
 
                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
