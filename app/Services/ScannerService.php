@@ -28,15 +28,13 @@ class ScannerService
                 $serieName = basename($directory);
                 $files = $this->getVideoFiles($directory, $videoExtensions);
 
-                if (count($files) > 0) {
-                    $series[] = [
-                        'name' => $serieName,
-                        'path' => $directory,
-                        'files' => $files,
-                        'type' => $type,
-                        'file_count' => count($files),
-                    ];
-                }
+                $series[] = [
+                    'name' => $serieName,
+                    'path' => $directory,
+                    'files' => $files,
+                    'type' => $type,
+                    'file_count' => count($files),
+                ];
             }
         }
 

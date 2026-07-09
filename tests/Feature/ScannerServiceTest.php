@@ -67,4 +67,34 @@ class ScannerServiceTest extends TestCase
         $this->assertDirectoryExists($this->tempDir.'/Season 2');
         $this->assertDirectoryExists($this->tempDir.'/Season 3');
     }
+
+    public function test_scan_includes_empty_folders(): void
+    {
+        // Create temp media structure
+        $animeDir = $this->tempDir.'/animes';
+        File::makeDirectory($animeDir, 0755, true);
+
+        // Empty series folder
+        File::makeDirectory($animeDir.'/Empty Anime', 0755, true);
+
+        // Series with files
+        $seriesDir = $animeDir.'/Some Anime';
+        File::makeDirectory($seriesDir, 0755, true);
+        file_put_contents($seriesDir.'/ep01.mp4', '');
+
+        config(['media.paths' => ['animes' => $animeDir]]);
+
+        $scanner = app(ScannerService::class);
+        $result = $scanner->scan();
+
+        $this->assertCount(2, $result);
+
+        $names = array_column($result, 'name');
+        $this->assertContains('Empty Anime', $names);
+        $this->assertContains('Some Anime', $names);
+
+        $emptySerie = collect($result)->firstWhere('name', 'Empty Anime');
+        $this->assertEquals(0, $emptySerie['file_count']);
+        $this->assertEmpty($emptySerie['files']);
+    }
 }

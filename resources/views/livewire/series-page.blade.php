@@ -78,8 +78,14 @@
                                         <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
                                             {{ $serie['name'] }}
                                         </div>
-                                         <div class="text-sm text-gray-500 dark:text-gray-400">
+                                     <div class="text-sm text-gray-500 dark:text-gray-400">
+                                         @if($serie['file_count'] === 0)
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                                 Empty
+                                             </span>
+                                         @else
                                              {{ $serie['file_count'] }} files
+                                         @endif
                                              @if(isset($serie['tmdb']) && $serie['tmdb'])
                                                  <span class="mx-1">·</span>
                                                  <span class="{{ $serie['missing_count'] === 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400' }}">

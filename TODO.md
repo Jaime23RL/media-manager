@@ -1,7 +1,6 @@
 # TODO - Media Manager
 
 ## Pending
-
 - [ ] Configure qBittorrent-nox as systemd service (daemon)
   - Install `qbittorrent-nox`
   - Create service at `/etc/systemd/system/qbittorrent.service`
