@@ -63,6 +63,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Nyaa.si (Torrent Search)
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for searching anime torrents on nyaa.si.
+    | RSS feed is used for searching with filtering and sorting.
+    |
+    */
+
+    'nyaa' => [
+        'base_url' => env('NYAA_BASE_URL', 'https://nyaa.si'),
+        'default_submitter' => env('NYAA_DEFAULT_SUBMITTER', 'Erai-raws'),
+        'default_quality' => env('NYAA_DEFAULT_QUALITY', '1080p'),
+        'concurrency' => (int) env('NYAA_CONCURRENCY', 5),
+        'cache_ttl' => (int) env('NYAA_CACHE_TTL', 86400),
+        'cache_path' => storage_path('app/cache/nyaa'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | TMDB Cache
     |--------------------------------------------------------------------------
     |

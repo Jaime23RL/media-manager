@@ -11,9 +11,19 @@ class JikanService
 
     private string $cachePath;
 
+    private array $debugLog = [];
+
     public function __construct()
     {
         $this->cachePath = storage_path('app/cache/jikan');
+    }
+
+    /**
+     * Get the debug log for this request.
+     */
+    public function getDebugLog(): array
+    {
+        return $this->debugLog;
     }
 
     /**
@@ -21,30 +31,67 @@ class JikanService
      */
     public function searchByName(string $query): ?array
     {
+        $this->debugLog = [];
+
         $cacheKey = 'search_'.md5(strtolower($query));
         $cached = $this->getFromCache($cacheKey);
         if ($cached !== null) {
+            $this->debugLog[] = [
+                'step' => 'jikan_cache_hit',
+                'query' => $query,
+                'cached' => $cached,
+            ];
+
             return $cached;
         }
 
-        $response = Http::get("{$this->baseUrl}/anime", [
+        $this->debugLog[] = [
+            'step' => 'jikan_api_call',
+            'query' => $query,
+            'url' => "{$this->baseUrl}/anime?q=".urlencode($query).'&limit=5',
+        ];
+
+        $response = Http::retry(2, 1000)->get("{$this->baseUrl}/anime", [
             'q' => $query,
             'limit' => 5,
         ]);
 
         if ($response->failed()) {
+            $this->debugLog[] = [
+                'step' => 'jikan_api_error',
+                'query' => $query,
+                'status' => $response->status(),
+            ];
+
             return null;
         }
 
         $results = $response->json('data', []);
 
         if (empty($results)) {
+            $this->debugLog[] = [
+                'step' => 'jikan_no_results',
+                'query' => $query,
+            ];
+
             return null;
         }
 
+        $this->debugLog[] = [
+            'step' => 'jikan_raw_results',
+            'query' => $query,
+            'count' => count($results),
+            'titles' => array_map(fn ($r) => [
+                'title' => $r['title'] ?? '',
+                'title_english' => $r['title_english'] ?? '',
+            ], $results),
+        ];
+
         // Find best match by comparing titles
         $bestMatch = null;
+        $matchedTitle = '';
         $queryLower = strtolower($query);
+        $queryWords = preg_split('/\s+/', $queryLower);
 
         foreach ($results as $result) {
             $titles = array_map('strtolower', array_column($result['titles'] ?? [], 'title'));
@@ -54,12 +101,37 @@ class JikanService
             foreach ($titles as $title) {
                 if ($title === $queryLower || str_contains($title, $queryLower) || str_contains($queryLower, $title)) {
                     $bestMatch = $result;
+                    $matchedTitle = $title;
                     break 2;
+                }
+            }
+
+            // Fallback: check if at least 60% of query words appear in any title
+            if (! $bestMatch) {
+                foreach ($titles as $title) {
+                    if ($title === '') {
+                        continue;
+                    }
+                    $matchingWords = count(array_filter($queryWords, fn ($w) => str_contains($title, $w)));
+                    $matchRatio = $matchingWords / count($queryWords);
+                    if ($matchRatio >= 0.6) {
+                        $bestMatch = $result;
+                        $matchedTitle = $title;
+                        break 2;
+                    }
                 }
             }
         }
 
-        // Fallback to first result if no exact match
+        $this->debugLog[] = [
+            'step' => 'jikan_match_result',
+            'query' => $query,
+            'best_match_found' => $bestMatch !== null,
+            'matched_title' => $matchedTitle ?: null,
+            'fallback_used' => $bestMatch === null,
+        ];
+
+        // Fallback to first result if no match
         if (! $bestMatch) {
             $bestMatch = $results[0];
         }

@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Services\CompareService;
+use App\Services\JikanService;
 use App\Services\NamingService;
+use App\Services\NyaaService;
 use App\Services\ScannerService;
 use App\Services\TmdbService;
 use Illuminate\Support\Facades\File;
@@ -28,6 +30,26 @@ class SerieDetailPage extends Component
     public string $seasonCreatedMessage = '';
 
     public array $existingSeasonFolders = [];
+
+    public array $nyaaResults = [];
+
+    public bool $searchingNyaa = false;
+
+    public string $nyaaSearchMessage = '';
+
+    public ?string $jikanName = null;
+
+    public string $nyaaCustomQuery = '';
+
+    public int $nyaaCustomSeason = 0;
+
+    public int $nyaaCustomEpisode = 0;
+
+    public array $openSeasons = [];
+
+    public array $nyaaDebugLog = [];
+
+    public array $customNames = [];
 
     public function mount($id): void
     {
@@ -81,6 +103,20 @@ class SerieDetailPage extends Component
     }
 
     /**
+     * Toggle a season's open/closed state.
+     */
+    public function toggleSeason(int $season): void
+    {
+        $key = array_search($season, $this->openSeasons);
+        if ($key === false) {
+            $this->openSeasons[] = $season;
+        } else {
+            unset($this->openSeasons[$key]);
+            $this->openSeasons = array_values($this->openSeasons);
+        }
+    }
+
+    /**
      * Group local files by season using NamingService.
      */
     private function groupLocalFiles(): void
@@ -127,6 +163,7 @@ class SerieDetailPage extends Component
         $this->tmdb = $cached['tmdb'] ?? null;
         $this->comparison = $cached['comparison'] ?? null;
         $this->episodesBySeason = $cached['episodes_by_season'] ?? [];
+        $this->customNames = $cached['custom_names'] ?? [];
     }
 
     /**
@@ -144,6 +181,7 @@ class SerieDetailPage extends Component
             'tmdb' => $this->tmdb,
             'comparison' => $this->comparison,
             'episodes_by_season' => $this->episodesBySeason,
+            'custom_names' => $this->customNames,
             'cached_at' => now()->toISOString(),
         ];
 
@@ -172,6 +210,7 @@ class SerieDetailPage extends Component
         $this->tmdb = null;
         $this->comparison = null;
         $this->episodesBySeason = [];
+        $this->customNames = [];
     }
 
     public function lookupTmdb(): void
@@ -211,10 +250,46 @@ class SerieDetailPage extends Component
         // Group episodes by season for display
         $this->episodesBySeason = $this->groupEpisodes($tmdbEpisodes, $this->comparison);
 
+        // Load Jikan romaji name for nyaa search
+        $this->loadJikanName();
+
         // Persist to cache
         $this->saveToCache();
 
         $this->loading = false;
+    }
+
+    /**
+     * Load romaji name from Jikan (MyAnimeList) for better nyaa.si search results.
+     */
+    private function loadJikanName(): void
+    {
+        if (! $this->tmdb) {
+            return;
+        }
+
+        try {
+            $jikan = app(JikanService::class);
+            $jikanResult = $jikan->searchByName($this->tmdb['name']);
+            $this->jikanName = $jikanResult['title'] ?? null;
+
+            $this->nyaaDebugLog[] = [
+                'step' => 'jikan_search',
+                'tmdb_name' => $this->tmdb['name'],
+                'jikan_result' => $jikanResult,
+                'jikan_name' => $this->jikanName,
+            ];
+
+            $this->nyaaDebugLog = array_merge($this->nyaaDebugLog, $jikan->getDebugLog());
+        } catch (\Exception $e) {
+            $this->jikanName = null;
+
+            $this->nyaaDebugLog[] = [
+                'step' => 'jikan_search_error',
+                'tmdb_name' => $this->tmdb['name'],
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     /**
@@ -342,6 +417,182 @@ class SerieDetailPage extends Component
         } else {
             $this->seasonCreatedMessage = 'All season folders already exist';
         }
+    }
+
+    /**
+     * Search nyaa.si for a specific missing episode using dual names.
+     */
+    public function searchNyaaForEpisode(int $season, int $episode): void
+    {
+        if (! $this->serie || ! $this->tmdb) {
+            return;
+        }
+
+        $this->nyaaSearchMessage = '';
+        $this->nyaaDebugLog = [];
+
+        $customName = $this->customNames[$season] ?? null;
+        $episodePadded = str_pad((string) $episode, 2, '0', STR_PAD_LEFT);
+
+        $names = array_filter([
+            $this->tmdb['name'],
+            $this->jikanName,
+            $customName ? "{$customName} - {$episodePadded}" : null,
+        ]);
+
+        $this->nyaaDebugLog[] = [
+            'step' => 'search_episode_start',
+            'names' => $names,
+            'season' => $season,
+            'episode' => $episode,
+            'tmdb_name' => $this->tmdb['name'],
+            'jikan_name' => $this->jikanName,
+            'custom_name' => $customName,
+            'custom_name_with_ep' => $customName ? "{$customName} - {$episodePadded}" : null,
+        ];
+
+        $nyaa = app(NyaaService::class);
+        $results = $nyaa->searchEpisode($names, $episode);
+
+        $this->nyaaDebugLog[] = [
+            'step' => 'search_episode_results',
+            'total_results' => count($results),
+            'results' => array_map(fn ($r) => ['title' => $r['title'], 'seeders' => $r['seeders']], $results),
+        ];
+
+        $this->nyaaDebugLog = array_merge($this->nyaaDebugLog, $nyaa->getDebugLog());
+
+        $this->nyaaResults["{$season}_{$episode}"] = $results;
+
+        if (empty($results)) {
+            $this->nyaaSearchMessage = 'No results found for E'.str_pad((string) $episode, 2, '0', STR_PAD_LEFT).'. Try a custom search below.';
+            $this->nyaaCustomSeason = $season;
+            $this->nyaaCustomEpisode = $episode;
+        } else {
+            $this->nyaaSearchMessage = count($results).' result(s) found for E'.str_pad((string) $episode, 2, '0', STR_PAD_LEFT);
+        }
+    }
+
+    /**
+     * Search nyaa.si for all missing episodes in a season using dual names.
+     */
+    public function searchNyaaForSeason(int $season): void
+    {
+        if (! $this->serie || ! $this->tmdb || ! isset($this->episodesBySeason[$season])) {
+            return;
+        }
+
+        $this->searchingNyaa = true;
+        $this->nyaaSearchMessage = '';
+        $this->nyaaDebugLog = [];
+
+        $missingEpisodes = collect($this->episodesBySeason[$season])
+            ->where('status', 'missing')
+            ->pluck('episode')
+            ->toArray();
+
+        if (empty($missingEpisodes)) {
+            $this->nyaaSearchMessage = "No missing episodes in Season {$season}";
+            $this->searchingNyaa = false;
+
+            return;
+        }
+
+        $names = array_filter([
+            $this->tmdb['name'],
+            $this->jikanName,
+            $this->customNames[$season] ?? null,
+        ]);
+
+        $this->nyaaDebugLog[] = [
+            'step' => 'search_season_start',
+            'names' => $names,
+            'season' => $season,
+            'missing_episodes' => $missingEpisodes,
+            'tmdb_name' => $this->tmdb['name'],
+            'jikan_name' => $this->jikanName,
+            'custom_name' => $this->customNames[$season] ?? null,
+        ];
+
+        $nyaa = app(NyaaService::class);
+        $results = $nyaa->searchMultipleEpisodes($names, $missingEpisodes);
+
+        foreach ($results as $ep => $torrents) {
+            $this->nyaaResults["{$season}_{$ep}"] = $torrents;
+        }
+
+        $totalResults = array_sum(array_map('count', $results));
+        $this->nyaaSearchMessage = "{$totalResults} result(s) found for ".count($missingEpisodes)." episode(s) in Season {$season}";
+
+        $this->nyaaDebugLog[] = [
+            'step' => 'search_season_results',
+            'total_results' => $totalResults,
+            'per_episode' => array_map(fn ($ep, $t) => ['episode' => $ep, 'count' => count($t)], array_keys($results), $results),
+        ];
+
+        $this->nyaaDebugLog = array_merge($this->nyaaDebugLog, $nyaa->getDebugLog());
+
+        $this->searchingNyaa = false;
+
+        if ($totalResults === 0) {
+            $this->nyaaSearchMessage = "No results found for Season {$season}. Try a custom search below.";
+            $this->nyaaCustomSeason = $season;
+            $this->nyaaCustomEpisode = 0;
+        }
+    }
+
+    /**
+     * Search nyaa.si with a custom query string.
+     */
+    public function searchNyaaCustom(): void
+    {
+        if ($this->nyaaCustomQuery === '') {
+            return;
+        }
+
+        $this->nyaaSearchMessage = '';
+        $this->nyaaDebugLog = [];
+
+        $this->nyaaDebugLog[] = [
+            'step' => 'custom_search_start',
+            'query' => $this->nyaaCustomQuery,
+            'season' => $this->nyaaCustomSeason,
+            'episode' => $this->nyaaCustomEpisode,
+        ];
+
+        $nyaa = app(NyaaService::class);
+        $results = $nyaa->searchCustom($this->nyaaCustomQuery);
+
+        $this->nyaaDebugLog[] = [
+            'step' => 'custom_search_results',
+            'total_results' => count($results),
+            'results' => array_map(fn ($r) => ['title' => $r['title'], 'seeders' => $r['seeders']], $results),
+        ];
+
+        $this->nyaaDebugLog = array_merge($this->nyaaDebugLog, $nyaa->getDebugLog());
+
+        $key = "{$this->nyaaCustomSeason}_{$this->nyaaCustomEpisode}";
+        $this->nyaaResults[$key] = $results;
+
+        if (empty($results)) {
+            $this->nyaaSearchMessage = 'No results found for "'.$this->nyaaCustomQuery.'"';
+        } else {
+            $this->nyaaSearchMessage = count($results).' result(s) found for "'.$this->nyaaCustomQuery.'"';
+
+            // Save custom name for this season for future searches
+            $this->customNames[$this->nyaaCustomSeason] = $this->nyaaCustomQuery;
+            $this->saveToCache();
+        }
+    }
+
+    /**
+     * Reset the custom name for a season.
+     */
+    public function resetCustomName(int $season): void
+    {
+        unset($this->customNames[$season]);
+        $this->customNames = array_values($this->customNames);
+        $this->saveToCache();
     }
 
     public function render()
