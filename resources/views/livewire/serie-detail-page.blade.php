@@ -134,6 +134,50 @@
             @endif
         @endif
 
+        {{-- qBittorrent flash message --}}
+        @if($qbMessage)
+            <div class="mb-4 {{ $qbMessageType === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' }} border rounded-lg px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 {{ $qbMessageType === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @if($qbMessageType === 'success')
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        @else
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        @endif
+                    </svg>
+                    <span class="text-sm {{ $qbMessageType === 'success' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300' }}">{{ $qbMessage }}</span>
+                </div>
+                <button wire:click="clearQbMessage" type="button" class="{{ $qbMessageType === 'success' ? 'text-green-600 dark:text-green-400 hover:text-green-800' : 'text-red-600 dark:text-red-400 hover:text-red-800' }}">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        @endif
+
+        {{-- Rename flash message --}}
+        @if($renameMessage)
+            <div class="mb-4 {{ $renameMessageType === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : ($renameMessageType === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800') }} border rounded-lg px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 {{ $renameMessageType === 'success' ? 'text-green-600 dark:text-green-400' : ($renameMessageType === 'error' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400') }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @if($renameMessageType === 'success')
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        @elseif($renameMessageType === 'error')
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        @else
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        @endif
+                    </svg>
+                    <span class="text-sm {{ $renameMessageType === 'success' ? 'text-green-700 dark:text-green-300' : ($renameMessageType === 'error' ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300') }}">{{ $renameMessage }}</span>
+                </div>
+                <button wire:click="clearRenameMessage" type="button" class="{{ $renameMessageType === 'success' ? 'text-green-600 dark:text-green-400 hover:text-green-800' : ($renameMessageType === 'error' ? 'text-red-600 dark:text-red-400 hover:text-red-800' : 'text-blue-600 dark:text-blue-400 hover:text-blue-800') }}">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        @endif
+
         {{-- TMDB Info --}}
         @if($tmdb)
             <div class="mb-6 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
@@ -197,6 +241,19 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                         Create all missing seasons
+                    </button>
+                @endif
+                @if(count($existingSeasonFolders) > 0)
+                    <button
+                        wire:click="renameSeries"
+                        wire:loading.attr="disabled"
+                        type="button"
+                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                    >
+                        <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Rename Files
                     </button>
                 @endif
             </div>
@@ -362,6 +419,18 @@
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                                             </svg>
                                                             Magnet
+                                                        </button>
+                                                        <button
+                                                            wire:click="addToQbittorrent('{{ $torrent['magnet'] }}', {{ $season }})"
+                                                            wire:loading.attr="disabled"
+                                                            type="button"
+                                                            class="flex-shrink-0 inline-flex items-center px-2 py-1 border border-transparent rounded text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                            title="Send to qBittorrent"
+                                                        >
+                                                            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                            </svg>
+                                                            Download
                                                         </button>
                                                     </div>
                                                 @endforeach

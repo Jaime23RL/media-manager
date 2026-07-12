@@ -6,6 +6,8 @@ use App\Services\CompareService;
 use App\Services\JikanService;
 use App\Services\NamingService;
 use App\Services\NyaaService;
+use App\Services\QbittorrentService;
+use App\Services\RenamerService;
 use App\Services\ScannerService;
 use App\Services\TmdbService;
 use Illuminate\Support\Facades\File;
@@ -50,6 +52,14 @@ class SerieDetailPage extends Component
     public array $nyaaDebugLog = [];
 
     public array $customNames = [];
+
+    public string $qbMessage = '';
+
+    public string $qbMessageType = '';
+
+    public string $renameMessage = '';
+
+    public string $renameMessageType = '';
 
     public function mount($id): void
     {
@@ -144,6 +154,7 @@ class SerieDetailPage extends Component
 
     /**
      * Load cached TMDB lookup if available.
+     * Auto-refresh comparison when local files have changed since the cache was saved.
      */
     private function loadFromCache(): void
     {
@@ -164,6 +175,17 @@ class SerieDetailPage extends Component
         $this->comparison = $cached['comparison'] ?? null;
         $this->episodesBySeason = $cached['episodes_by_season'] ?? [];
         $this->customNames = $cached['custom_names'] ?? [];
+
+        // Detect stale cache: files changed since the comparison was run
+        if (isset($cached['files_hash']) && $this->serie !== null && isset($this->serie['files'])) {
+            $currentFiles = $this->serie['files'];
+            sort($currentFiles);
+            $currentHash = md5(serialize($currentFiles));
+
+            if ($cached['files_hash'] !== $currentHash && $this->tmdb !== null) {
+                $this->refreshComparison();
+            }
+        }
     }
 
     /**
@@ -177,12 +199,16 @@ class SerieDetailPage extends Component
             File::makeDirectory($cacheDir, 0755, true);
         }
 
+        $files = $this->serie['files'] ?? [];
+        sort($files);
+
         $data = [
             'tmdb' => $this->tmdb,
             'comparison' => $this->comparison,
             'episodes_by_season' => $this->episodesBySeason,
             'custom_names' => $this->customNames,
             'cached_at' => now()->toISOString(),
+            'files_hash' => md5(serialize($files)),
         ];
 
         file_put_contents($this->getCachePath(), json_encode($data, JSON_PRETTY_PRINT));
@@ -194,6 +220,24 @@ class SerieDetailPage extends Component
     private function getCachePath(): string
     {
         return config('media.cache_path').'/serie_'.md5($this->serie['name'] ?? $this->id).'.json';
+    }
+
+    /**
+     * Re-run the TMDB comparison using current local files and cached TMDB data.
+     * Used when the comparison cache is stale (new files detected).
+     */
+    private function refreshComparison(): void
+    {
+        if ($this->tmdb === null || $this->serie === null) {
+            return;
+        }
+
+        $tmdb = app(TmdbService::class);
+        $tmdbEpisodes = $tmdb->getAllEpisodes($this->tmdb['tmdb_id']);
+        $compareService = app(CompareService::class);
+        $this->comparison = $compareService->compare($this->serie['files'], $tmdbEpisodes);
+        $this->episodesBySeason = $this->groupEpisodes($tmdbEpisodes, $this->comparison);
+        $this->saveToCache();
     }
 
     /**
@@ -593,6 +637,92 @@ class SerieDetailPage extends Component
         unset($this->customNames[$season]);
         $this->customNames = array_values($this->customNames);
         $this->saveToCache();
+    }
+
+    /**
+     * Send a magnet link to qBittorrent for downloading.
+     */
+    public function addToQbittorrent(string $magnet, int $season): void
+    {
+        if (! $this->serie) {
+            return;
+        }
+
+        $savePath = $this->serie['path'] ?? null;
+
+        if ($savePath === null) {
+            $this->qbMessage = 'Series path not available';
+            $this->qbMessageType = 'error';
+
+            return;
+        }
+
+        if (! $this->seasonFolderExists($season)) {
+            $this->qbMessage = 'Create Season '.$season.' folder first';
+            $this->qbMessageType = 'error';
+
+            return;
+        }
+
+        $savePath .= '/Season '.$season;
+
+        $qb = app(QbittorrentService::class);
+        $added = $qb->addMagnet($magnet, $savePath);
+
+        if ($added) {
+            $this->qbMessage = 'Torrent added to download queue';
+            $this->qbMessageType = 'success';
+        } else {
+            $this->qbMessage = 'Failed to add torrent. Check qBittorrent connection.';
+            $this->qbMessageType = 'error';
+        }
+    }
+
+    /**
+     * Clear the qBittorrent flash message.
+     */
+    public function clearQbMessage(): void
+    {
+        $this->qbMessage = '';
+    }
+
+    /**
+     * Rename files in the series directory using the renamer script.
+     */
+    public function renameSeries(): void
+    {
+        if (! $this->serie || ! isset($this->serie['path'])) {
+            return;
+        }
+
+        $renamer = app(RenamerService::class);
+        $result = $renamer->rename($this->serie['path']);
+
+        if (! $result['success']) {
+            $this->renameMessage = 'Renaming failed. Is Python installed?';
+            $this->renameMessageType = 'error';
+
+            return;
+        }
+
+        if ($result['renamed'] > 0) {
+            $this->renameMessage = 'Renamed '.$result['renamed'].' file(s)';
+            $this->renameMessageType = 'success';
+        } elseif ($result['already_correct'] > 0) {
+            $this->renameMessage = $result['already_correct'].' file(s) already correctly named';
+            $this->renameMessageType = 'info';
+        } else {
+            $this->renameMessage = 'No files needed renaming';
+            $this->renameMessageType = 'info';
+        }
+    }
+
+    /**
+     * Clear the rename flash message.
+     */
+    public function clearRenameMessage(): void
+    {
+        $this->renameMessage = '';
     }
 
     public function render()
