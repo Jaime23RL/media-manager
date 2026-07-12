@@ -1,254 +1,234 @@
 <div>
     {{-- Header --}}
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Add Anime</h1>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Search TMDB and create folder structure for a new anime.
-        </p>
+        <flux:heading size="xl">{{ __('Add Anime') }}</flux:heading>
+        <flux:text class="mt-1">{{ __('Search TMDB and create folder structure for a new anime.') }}</flux:text>
     </div>
 
     {{-- Success state --}}
     @if($created)
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                    <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+        <flux:card>
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                    <flux:icon name="check-circle" class="size-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Folders created successfully</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $createdPath }}</p>
+                    <flux:heading size="sm">{{ __('Folders created successfully') }}</flux:heading>
+                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ $createdPath }}</flux:text>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <a href="{{ route('series') }}" wire:navigate
-                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700">
-                    Go to Series
-                </a>
-                <button wire:click="resetSearch" type="button"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    Add another anime
-                </button>
+
+            <div class="mt-4 flex gap-2">
+                <flux:button variant="primary" icon="tv" href="{{ route('series') }}" wire:navigate>
+                    {{ __('Go to Series') }}
+                </flux:button>
+                <flux:button variant="ghost" wire:click="resetSearch">
+                    {{ __('Add another anime') }}
+                </flux:button>
             </div>
-        </div>
+        </flux:card>
 
     {{-- Configuration step --}}
     @elseif($selectedSerie)
         <div class="mb-4">
-            <button wire:click="backToResults" type="button"
-                    class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to results
-            </button>
+            <flux:button variant="ghost" size="sm" icon="arrow-left" wire:click="backToResults">
+                {{ __('Back to results') }}
+            </flux:button>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <div class="flex items-start gap-4 mb-6">
+        <flux:card class="space-y-6">
+            <div class="flex items-start gap-4">
                 @if($selectedSerie['poster_path'] ?? null)
                     <img src="https://image.tmdb.org/t/p/w200{{ $selectedSerie['poster_path'] }}"
                          alt="{{ $selectedSerie['name'] }}"
-                         class="w-24 h-36 object-cover rounded-lg shadow flex-shrink-0" />
+                         class="h-36 w-24 shrink-0 rounded-lg object-cover shadow" />
                 @endif
-                <div class="flex-1 min-w-0">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $selectedSerie['name'] }}</h2>
+                <div class="min-w-0 flex-1">
+                    <flux:heading size="lg">{{ $selectedSerie['name'] }}</flux:heading>
                     @if($selectedSerie['first_air_date'] ?? null)
-                        <p class="text-sm text-gray-500 dark:text-gray-400">First aired: {{ $selectedSerie['first_air_date'] }}</p>
+                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                            {{ __('First aired:') }} {{ $selectedSerie['first_air_date'] }}
+                        </flux:text>
                     @endif
                     @if($selectedSerie['overview'] ?? null)
-                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{{ $selectedSerie['overview'] }}</p>
+                        <flux:text size="sm" class="mt-2 line-clamp-3">
+                            {{ $selectedSerie['overview'] }}
+                        </flux:text>
                     @endif
                 </div>
             </div>
 
             {{-- Folder name --}}
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Folder name</label>
+            <div class="space-y-3">
+                <flux:heading size="sm">{{ __('Folder name') }}</flux:heading>
 
-                {{-- Name suggestions --}}
                 @if(count($nameSuggestions) > 0)
-                    <div class="space-y-1.5 mb-3">
+                    <flux:radio.group wire:model.live="selectedNameOption">
                         @foreach($nameSuggestions as $suggestion)
-                            <label class="flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedNameOption === $suggestion['name'] ? 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }} hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors">
-                                <input type="radio" name="folder_name" value="{{ $suggestion['name'] }}"
-                                       wire:model.live="selectedNameOption"
-                                       class="border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500" />
-                                <div class="flex-1 min-w-0">
-                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $suggestion['name'] }}</span>
+                            <flux:radio value="{{ $suggestion['name'] }}">
+                                <flux:radio.indicator />
+                                <div class="flex flex-1 items-center justify-between">
+                                    <flux:heading size="sm">{{ $suggestion['name'] }}</flux:heading>
+                                    <flux:text size="sm" class="text-zinc-400 dark:text-zinc-500">{{ $suggestion['label'] }}</flux:text>
                                 </div>
-                                <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{{ $suggestion['label'] }}</span>
-                            </label>
+                            </flux:radio>
                         @endforeach
-
-                        {{-- Custom name option --}}
-                        <label class="flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedNameOption === 'custom' ? 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }} hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors">
-                            <input type="radio" name="folder_name" value="custom"
-                                   wire:model.live="selectedNameOption"
-                                   class="border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500" />
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">Custom name</span>
-                        </label>
-                    </div>
+                        <flux:radio value="custom">
+                            <flux:radio.indicator />
+                            <flux:heading size="sm">{{ __('Custom name') }}</flux:heading>
+                        </flux:radio>
+                    </flux:radio.group>
                 @endif
 
-                {{-- Custom name input --}}
                 @if($selectedNameOption === 'custom' || count($nameSuggestions) === 0)
-                    <input type="text" wire:model="folderName" placeholder="Enter custom folder name..."
-                           class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 text-base px-4 py-3" />
+                    <flux:input wire:model="folderName" placeholder="{{ __('Enter custom folder name...') }}" />
                 @endif
 
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">
                     {{ config('media.paths.animes') }}/{{ $folderName }}
-                </p>
+                </flux:text>
             </div>
 
             {{-- Seasons --}}
             @if(count($seasons) > 0)
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Seasons to create</label>
-                    <div class="space-y-2">
+                <div class="space-y-3">
+                    <flux:heading size="sm">{{ __('Seasons to create') }}</flux:heading>
+                    <flux:checkbox.group wire:model="selectedSeasons">
                         @foreach($seasons as $season)
-                            <label class="flex items-center gap-3 p-3 rounded-lg border {{ in_array($season['number'], $selectedSeasons) ? 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800' }} hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer transition-colors">
-                                <input type="checkbox" wire:model="selectedSeasons" value="{{ $season['number'] }}"
-                                       class="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500" />
-                                <div class="flex-1">
-                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Season {{ $season['number'] }}</span>
-                                    <span class="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                                        {{ $season['episode_count'] }} {{ $season['episode_count'] === 1 ? 'episode' : 'episodes' }}
-                                    </span>
+                            <flux:checkbox value="{{ $season['number'] }}">
+                                <flux:checkbox.indicator />
+                                <div class="flex flex-1 items-center justify-between">
+                                    <div>
+                                        <flux:heading size="sm">{{ __('Season') }} {{ $season['number'] }}</flux:heading>
+                                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                            {{ $season['episode_count'] }} {{ $season['episode_count'] === 1 ? __('episode') : __('episodes') }}
+                                        </flux:text>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        @if($season['is_aired'])
+                                            <flux:badge size="sm" color="green">{{ __('Aired') }}</flux:badge>
+                                        @else
+                                            <flux:badge size="sm" color="blue">{{ __('Upcoming') }}</flux:badge>
+                                        @endif
+                                        @if($season['air_date'])
+                                            <flux:text size="xs" class="text-zinc-400 dark:text-zinc-500">{{ $season['air_date'] }}</flux:text>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    @if($season['is_aired'])
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                            Aired
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                                            Upcoming
-                                        </span>
-                                    @endif
-                                    @if($season['air_date'])
-                                        <span class="text-xs text-gray-400 dark:text-gray-500">{{ $season['air_date'] }}</span>
-                                    @endif
-                                </div>
-                            </label>
+                            </flux:checkbox>
                         @endforeach
-                    </div>
+                    </flux:checkbox.group>
                 </div>
             @endif
 
             {{-- Create button --}}
             <div class="flex justify-end">
-                <button wire:click="createFolders"
-                        wire:loading.attr="disabled"
-                        wire:loading.class="opacity-50"
-                        type="button"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:cursor-not-allowed">
+                <flux:button
+                    variant="primary"
+                    icon="plus"
+                    wire:click="createFolders"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50"
+                >
                     <span wire:loading.remove wire:target="createFolders">
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Create {{ count($selectedSeasons) }} {{ count($selectedSeasons) === 1 ? 'folder' : 'folders' }}
+                        {{ __('Create') }} {{ count($selectedSeasons) }} {{ count($selectedSeasons) === 1 ? __('folder') : __('folders') }}
                     </span>
-                    <span wire:loading wire:target="createFolders">Creating...</span>
-                </button>
+                    <span wire:loading wire:target="createFolders">{{ __('Creating...') }}</span>
+                </flux:button>
             </div>
-        </div>
+        </flux:card>
 
     {{-- Search results --}}
     @elseif(count($results) > 0)
         <div class="mb-4">
-            <button wire:click="resetSearch" type="button"
-                    class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                New search
-            </button>
+            <flux:button variant="ghost" size="sm" icon="arrow-left" wire:click="resetSearch">
+                {{ __('New search') }}
+            </flux:button>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <p class="text-sm text-gray-600 dark:text-gray-300">
-                    {{ count($results) }} {{ count($results) === 1 ? 'result' : 'results' }} for "<span class="font-medium">{{ $searchQuery }}</span>"
-                </p>
+        <flux:card class="overflow-hidden p-0">
+            <div class="border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                <flux:text size="sm">
+                    {{ count($results) }} {{ count($results) === 1 ? __('result') : __('results') }} {{ __('for') }} "<span class="font-medium">{{ $searchQuery }}</span>"
+                </flux:text>
             </div>
-            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                @foreach($results as $result)
-                    <li class="px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <div class="flex items-start gap-4">
-                            @if($result['poster_path'] ?? null)
-                                <img src="https://image.tmdb.org/t/p/w200{{ $result['poster_path'] }}"
-                                     alt="{{ $result['name'] ?? $result['original_name'] }}"
-                                     class="w-16 h-24 object-cover rounded shadow flex-shrink-0" />
-                            @else
-                                <div class="w-16 h-24 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                                    </svg>
-                                </div>
-                            @endif
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-sm font-medium text-gray-900 dark:text-white">
-                                    {{ $result['name'] ?? $result['original_name'] ?? 'Unknown' }}
-                                </h3>
-                                @if(isset($result['original_name']) && ($result['original_name'] ?? '') !== ($result['name'] ?? ''))
-                                    <p class="text-xs text-gray-400 dark:text-gray-500">{{ $result['original_name'] }}</p>
-                                @endif
-                                <div class="flex items-center gap-2 mt-1">
-                                    @if($result['first_air_date'] ?? null)
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ substr($result['first_air_date'], 0, 4) }}</span>
+
+            <flux:table>
+                <flux:table.rows>
+                    @foreach($results as $result)
+                        <flux:table.row :key="$result['id']">
+                            <flux:table.cell>
+                                <div class="flex items-start gap-4">
+                                    @if($result['poster_path'] ?? null)
+                                        <img src="https://image.tmdb.org/t/p/w200{{ $result['poster_path'] }}"
+                                             alt="{{ $result['name'] ?? $result['original_name'] }}"
+                                             class="h-24 w-16 shrink-0 rounded object-cover shadow" />
+                                    @else
+                                        <div class="flex h-24 w-16 shrink-0 items-center justify-center rounded bg-zinc-200 dark:bg-zinc-700">
+                                            <flux:icon name="tv" class="size-8 text-zinc-400 dark:text-zinc-500" />
+                                        </div>
                                     @endif
-                                    @if($result['vote_average'] ?? null)
-                                        <span class="text-xs text-yellow-600 dark:text-yellow-400">★ {{ number_format($result['vote_average'], 1) }}</span>
-                                    @endif
+                                    <div class="min-w-0 flex-1">
+                                        <flux:heading size="sm">{{ $result['name'] ?? $result['original_name'] ?? __('Unknown') }}</flux:heading>
+                                        @if(isset($result['original_name']) && ($result['original_name'] ?? '') !== ($result['name'] ?? ''))
+                                            <flux:text size="xs" class="text-zinc-400 dark:text-zinc-500">{{ $result['original_name'] }}</flux:text>
+                                        @endif
+                                        <div class="mt-1 flex items-center gap-2">
+                                            @if($result['first_air_date'] ?? null)
+                                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">{{ substr($result['first_air_date'], 0, 4) }}</flux:text>
+                                            @endif
+                                            @if($result['vote_average'] ?? null)
+                                                <flux:text size="xs" class="text-yellow-600 dark:text-yellow-400">★ {{ number_format($result['vote_average'], 1) }}</flux:text>
+                                            @endif
+                                        </div>
+                                        @if($result['overview'] ?? null)
+                                            <flux:text size="xs" class="mt-1 line-clamp-2 text-zinc-500 dark:text-zinc-400">
+                                                {{ $result['overview'] }}
+                                            </flux:text>
+                                        @endif
+                                    </div>
+                                    <flux:button
+                                        size="sm"
+                                        variant="outline"
+                                        icon="chevron-right"
+                                        wire:click="select({{ $result['id'] }})"
+                                    >
+                                        {{ __('Select') }}
+                                    </flux:button>
                                 </div>
-                                @if($result['overview'] ?? null)
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ $result['overview'] }}</p>
-                                @endif
-                            </div>
-                            <button wire:click="select({{ $result['id'] }})" type="button"
-                                    class="flex-shrink-0 inline-flex items-center px-3 py-1.5 border border-purple-300 dark:border-purple-600 text-sm font-medium rounded-md text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors">
-                                Select
-                                <svg class="ml-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        </flux:card>
 
     {{-- Search form --}}
     @else
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <flux:card>
             <form wire:submit="search" class="flex gap-3">
-                <input type="text" wire:model="searchQuery" placeholder="Search anime name..."
-                       class="flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm" />
-                <button type="submit"
-                        wire:loading.attr="disabled"
-                        wire:loading.class="opacity-50"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="search">
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        Search
-                    </span>
-                    <span wire:loading wire:target="search">Searching...</span>
-                </button>
+                <flux:input
+                    wire:model="searchQuery"
+                    placeholder="{{ __('Search anime name...') }}"
+                    class="flex-1"
+                />
+                <flux:button
+                    variant="primary"
+                    icon="magnifying-glass"
+                    type="submit"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50"
+                >
+                    <span wire:loading.remove wire:target="search">{{ __('Search') }}</span>
+                    <span wire:loading wire:target="search">{{ __('Searching...') }}</span>
+                </flux:button>
             </form>
 
             @if($searchError)
-                <div class="mt-4 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {{ $searchError }}
-                </div>
+                <flux:callout variant="error" icon="exclamation-circle" class="mt-4">
+                    <flux:callout.text>{{ $searchError }}</flux:callout.text>
+                </flux:callout>
             @endif
-        </div>
+        </flux:card>
     @endif
 </div>

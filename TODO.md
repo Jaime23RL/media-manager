@@ -1,13 +1,15 @@
 # TODO - Media Manager
 
 ## Pending
-- [ ] Configure qBittorrent-nox as systemd service (daemon)
-  - Install `qbittorrent-nox`
-  - Create service at `/etc/systemd/system/qbittorrent.service`
-  - Enable and start with `systemctl enable --now qbittorrent`
-  - Benefit: starts on boot, runs in background, WebUI for managing downloads
+- [ ] Settings page UI (currently stub)
 
 ## Completed
+- [x] Configure qBittorrent-nox as systemd user service (daemon)
+  - Service at `~/.config/systemd/user/qbittorrent.service`
+  - Enabled and running on port 23552
+- [x] Create QbittorrentService (login, add magnet, get/pause/resume/delete torrents)
+- [x] Implement DownloadsPage with live queue, progress bars, and actions
+- [x] Integrate "Download" button in SerieDetailPage nyaa results
 
 - [x] Install Laravel Boost for AI guidelines (Livewire, Flux, Tailwind best practices)
 - [x] Configure qBittorrent WebUI (port 23552, user admin)

@@ -27,12 +27,16 @@
                     <flux:sidebar.item icon="tv" :href="route('series')" :current="request()->routeIs('series') || request()->routeIs('series.show')" wire:navigate>
                         {{ __('Series') }}
                     </flux:sidebar.item>
+                </flux:sidebar.group>
 
+                <flux:sidebar.group :heading="__('Downloads')" class="grid">
                     <flux:sidebar.item icon="arrow-down-tray" :href="route('downloads')" :current="request()->routeIs('downloads')" wire:navigate>
                         {{ __('Downloads') }}
                     </flux:sidebar.item>
+                </flux:sidebar.group>
 
-                    <flux:sidebar.item icon="cog" :href="route('settings.media')" :current="request()->routeIs('settings.media')" wire:navigate>
+                <flux:sidebar.group :heading="__('Configuration')" class="grid">
+                    <flux:sidebar.item icon="cog-6-tooth" :href="route('settings.media')" :current="request()->routeIs('settings.media')" wire:navigate>
                         {{ __('Settings') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
@@ -75,7 +79,7 @@
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
+                        <flux:menu.item :href="route('profile.edit')" icon="cog-6-tooth" wire:navigate>
                             {{ __('Settings') }}
                         </flux:menu.item>
                     </flux:menu.radio.group>

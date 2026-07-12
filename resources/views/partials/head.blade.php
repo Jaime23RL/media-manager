@@ -13,3 +13,46 @@
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
+
+@if (auth()->check())
+    @php
+        $accentColor = auth()->user()->setting('theme.accent_color', 'neutral');
+    @endphp
+
+    <style id="user-theme">
+        html {
+            --color-accent: var(--color-{{ $accentColor }}-500);
+            --color-accent-content: var(--color-{{ $accentColor }}-600);
+            --color-accent-foreground: var(--color-white);
+        }
+        html.dark {
+            --color-accent: var(--color-{{ $accentColor }}-500);
+            --color-accent-content: var(--color-{{ $accentColor }}-400);
+            --color-accent-foreground: var(--color-zinc-800);
+        }
+    </style>
+
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('theme-changed', (event) => {
+                const color = Array.isArray(event) ? event[0]?.color : event.color;
+                if (!color) return;
+                const style = document.getElementById('user-theme');
+                if (style) {
+                    style.textContent = `
+                        html {
+                            --color-accent: var(--color-${color}-500);
+                            --color-accent-content: var(--color-${color}-600);
+                            --color-accent-foreground: var(--color-white);
+                        }
+                        html.dark {
+                            --color-accent: var(--color-${color}-500);
+                            --color-accent-content: var(--color-${color}-400);
+                            --color-accent-foreground: var(--color-zinc-800);
+                        }
+                    `;
+                }
+            });
+        });
+    </script>
+@endif

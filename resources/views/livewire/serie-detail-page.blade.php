@@ -1,133 +1,114 @@
 <div>
     {{-- Back link --}}
     <div class="mb-4">
-        <a href="{{ route('series') }}" wire:navigate class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Series
-        </a>
+        <flux:button variant="ghost" size="sm" icon="arrow-left" href="{{ route('series') }}" wire:navigate>
+            {{ __('Back to Series') }}
+        </flux:button>
     </div>
 
     @if(!$serie)
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 text-center">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white">Series not found</h3>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                The series you're looking for doesn't exist or hasn't been scanned yet.
-            </p>
-        </div>
+        <flux:card class="py-10 text-center">
+            <flux:heading size="sm">{{ __('Series not found') }}</flux:heading>
+            <flux:text size="sm" class="mt-1 text-zinc-500 dark:text-zinc-400">
+                {{ __('The series you are looking for does not exist or has not been scanned yet.') }}
+            </flux:text>
+        </flux:card>
     @else
         {{-- Header --}}
         <div class="mb-6 flex items-start justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $serie['name'] }}</h1>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {{ $serie['file_count'] }} local files · {{ $serie['type'] === 'anime' ? 'Anime' : 'Movie' }}
-                </p>
+                <flux:heading size="xl">{{ $serie['name'] }}</flux:heading>
+                <flux:text size="sm" class="mt-1 text-zinc-500 dark:text-zinc-400">
+                    {{ $serie['file_count'] }} {{ __('local files') }} · {{ $serie['type'] === 'anime' ? __('Anime') : __('Movie') }}
+                </flux:text>
             </div>
 
             <div class="flex gap-2">
                 @if($tmdb)
-                    <button
+                    <flux:button
+                        variant="outline"
+                        size="sm"
+                        icon="arrow-path"
                         wire:click="clearCache"
-                        type="button"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh from TMDB
-                    </button>
+                        {{ __('Refresh from TMDB') }}
+                    </flux:button>
                 @endif
 
-                <button
+                <flux:button
+                    variant="primary"
+                    size="sm"
+                    icon="magnifying-glass"
                     wire:click="lookupTmdb"
                     wire:loading.attr="disabled"
                     wire:loading.class="opacity-50"
-                    type="button"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:cursor-not-allowed"
                 >
-                    <span wire:loading.remove wire:target="lookupTmdb">
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </span>
-                    <span wire:loading wire:target="lookupTmdb">Searching...</span>
-                    <span wire:loading.remove wire:target="lookupTmdb">{{ $tmdb ? 'Lookup on TMDB' : 'Lookup on TMDB' }}</span>
-                </button>
+                    <span wire:loading.remove wire:target="lookupTmdb">{{ __('Lookup on TMDB') }}</span>
+                    <span wire:loading wire:target="lookupTmdb">{{ __('Searching...') }}</span>
+                </flux:button>
             </div>
         </div>
 
         {{-- Flash messages --}}
         @if($seasonCreatedMessage)
-            <div class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span class="text-sm text-green-700 dark:text-green-300">{{ $seasonCreatedMessage }}</span>
+            <flux:callout variant="success" icon="check-circle" class="mb-4">
+                <div class="flex items-center justify-between">
+                    <flux:callout.text>{{ $seasonCreatedMessage }}</flux:callout.text>
+                    <flux:button variant="ghost" size="sm" inset wire:click="$set('seasonCreatedMessage', '')">
+                        <flux:icon name="x-mark" class="size-4" />
+                    </flux:button>
                 </div>
-                <button wire:click="$set('seasonCreatedMessage', '')" type="button" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            </flux:callout>
         @endif
 
         @if($nyaaSearchMessage)
-            <div class="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <span class="text-sm text-blue-700 dark:text-blue-300">{{ $nyaaSearchMessage }}</span>
+            <flux:callout variant="info" icon="magnifying-glass" class="mb-4">
+                <div class="flex items-center justify-between">
+                    <flux:callout.text>{{ $nyaaSearchMessage }}</flux:callout.text>
+                    <flux:button variant="ghost" size="sm" inset wire:click="$set('nyaaSearchMessage', '')">
+                        <flux:icon name="x-mark" class="size-4" />
+                    </flux:button>
                 </div>
-                <button wire:click="$set('nyaaSearchMessage', '')" type="button" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            </flux:callout>
 
             @if($nyaaCustomSeason > 0)
-                <div class="mb-4 bg-white dark:bg-gray-800 shadow rounded-lg px-4 py-3">
+                <flux:card class="mb-4">
                     <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-600 dark:text-gray-300">
+                        <flux:text size="sm">
                             @if($nyaaCustomEpisode > 0)
-                                Custom search for E{{ str_pad((string) $nyaaCustomEpisode, 2, '0', STR_PAD_LEFT) }}:
+                                {{ __('Custom search for E:episode:', ['episode' => str_pad((string) $nyaaCustomEpisode, 2, '0', STR_PAD_LEFT)]) }}
                             @else
-                                Custom search for Season {{ $nyaaCustomSeason }}:
+                                {{ __('Custom search for Season :season:', ['season' => $nyaaCustomSeason]) }}
                             @endif
-                        </span>
-                        <input
-                            type="text"
+                        </flux:text>
+                        <flux:input
                             wire:model="nyaaCustomQuery"
-                            placeholder="{{ $nyaaCustomEpisode > 0 ? 'e.g. Mushoku Tensei III - 01' : 'e.g. Mushoku Tensei III' }}"
-                            class="flex-1 text-sm border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="{{ $nyaaCustomEpisode > 0 ? __('e.g. Mushoku Tensei III - 01') : __('e.g. Mushoku Tensei III') }}"
+                            size="sm"
+                            class="flex-1"
                             wire:keydown.enter="searchNyaaCustom"
                         />
-                        <button
+                        <flux:button
+                            size="sm"
+                            variant="primary"
                             wire:click="searchNyaaCustom"
                             wire:loading.attr="disabled"
-                            type="button"
-                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 disabled:cursor-not-allowed"
                         >
-                            Search
-                        </button>
+                            {{ __('Search') }}
+                        </flux:button>
                     </div>
-                </div>
+                </flux:card>
             @endif
 
             {{-- Debug panel --}}
             @if(count($nyaaDebugLog) > 0)
                 <div class="mb-4">
-                    <details open class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
-                        <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                            Debug: Nyaa Search ({{ count($nyaaDebugLog) }} entries)
+                    <details open class="rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+                        <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                            {{ __('Debug: Nyaa Search') }} ({{ count($nyaaDebugLog) }} {{ __('entries') }})
                         </summary>
                         <div class="px-4 pb-4">
-                            <pre class="text-xs text-gray-600 dark:text-gray-400 overflow-x-auto whitespace-pre-wrap break-words max-h-96 overflow-y-auto">{{ json_encode($nyaaDebugLog, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                            <pre class="max-h-96 overflow-y-auto overflow-x-auto whitespace-pre-wrap break-words text-xs text-zinc-600 dark:text-zinc-400">{{ json_encode($nyaaDebugLog, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                         </div>
                     </details>
                 </div>
@@ -136,67 +117,59 @@
 
         {{-- qBittorrent flash message --}}
         @if($qbMessage)
-            <div class="mb-4 {{ $qbMessageType === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' }} border rounded-lg px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="h-5 w-5 {{ $qbMessageType === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        @if($qbMessageType === 'success')
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        @else
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        @endif
-                    </svg>
-                    <span class="text-sm {{ $qbMessageType === 'success' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300' }}">{{ $qbMessage }}</span>
+            <flux:callout
+                variant="{{ $qbMessageType }}"
+                icon="{{ $qbMessageType === 'success' ? 'check-circle' : 'x-circle' }}"
+                class="mb-4"
+            >
+                <div class="flex items-center justify-between">
+                    <flux:callout.text>{{ $qbMessage }}</flux:callout.text>
+                    <flux:button variant="ghost" size="sm" inset wire:click="clearQbMessage">
+                        <flux:icon name="x-mark" class="size-4" />
+                    </flux:button>
                 </div>
-                <button wire:click="clearQbMessage" type="button" class="{{ $qbMessageType === 'success' ? 'text-green-600 dark:text-green-400 hover:text-green-800' : 'text-red-600 dark:text-red-400 hover:text-red-800' }}">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            </flux:callout>
         @endif
 
         {{-- Rename flash message --}}
         @if($renameMessage)
-            <div class="mb-4 {{ $renameMessageType === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : ($renameMessageType === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800') }} border rounded-lg px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="h-5 w-5 {{ $renameMessageType === 'success' ? 'text-green-600 dark:text-green-400' : ($renameMessageType === 'error' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400') }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        @if($renameMessageType === 'success')
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        @elseif($renameMessageType === 'error')
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        @else
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        @endif
-                    </svg>
-                    <span class="text-sm {{ $renameMessageType === 'success' ? 'text-green-700 dark:text-green-300' : ($renameMessageType === 'error' ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300') }}">{{ $renameMessage }}</span>
+            <flux:callout
+                variant="{{ $renameMessageType === 'success' ? 'success' : ($renameMessageType === 'error' ? 'error' : 'info') }}"
+                icon="{{ $renameMessageType === 'success' ? 'check-circle' : ($renameMessageType === 'error' ? 'x-circle' : 'information-circle') }}"
+                class="mb-4"
+            >
+                <div class="flex items-center justify-between">
+                    <flux:callout.text>{{ $renameMessage }}</flux:callout.text>
+                    <flux:button variant="ghost" size="sm" inset wire:click="clearRenameMessage">
+                        <flux:icon name="x-mark" class="size-4" />
+                    </flux:button>
                 </div>
-                <button wire:click="clearRenameMessage" type="button" class="{{ $renameMessageType === 'success' ? 'text-green-600 dark:text-green-400 hover:text-green-800' : ($renameMessageType === 'error' ? 'text-red-600 dark:text-red-400 hover:text-red-800' : 'text-blue-600 dark:text-blue-400 hover:text-blue-800') }}">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            </flux:callout>
         @endif
 
         {{-- TMDB Info --}}
         @if($tmdb)
-            <div class="mb-6 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <flux:card class="mb-6">
                 <div class="flex items-start gap-4">
                     @if($tmdb['poster_path'])
                         <img src="https://image.tmdb.org/t/p/w200{{ $tmdb['poster_path'] }}"
                              alt="{{ $tmdb['name'] }}"
-                             class="w-24 h-36 object-cover rounded-lg shadow" />
+                             class="h-36 w-24 shrink-0 rounded-lg object-cover shadow" />
                     @endif
                     <div class="flex-1">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $tmdb['name'] }}</h2>
+                        <flux:heading size="lg">{{ $tmdb['name'] }}</flux:heading>
                         @if($jikanName && $jikanName !== $tmdb['name'])
-                            <p class="text-sm text-gray-500 dark:text-gray-400 italic">{{ $jikanName }}</p>
+                            <flux:text size="sm" class="italic text-zinc-500 dark:text-zinc-400">{{ $jikanName }}</flux:text>
                         @endif
                         @if($tmdb['first_air_date'])
-                            <p class="text-sm text-gray-500 dark:text-gray-400">First aired: {{ $tmdb['first_air_date'] }}</p>
+                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                {{ __('First aired:') }} {{ $tmdb['first_air_date'] }}
+                            </flux:text>
                         @endif
                         @if($tmdb['overview'])
-                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{{ $tmdb['overview'] }}</p>
+                            <flux:text size="sm" class="mt-2 line-clamp-3">
+                                {{ $tmdb['overview'] }}
+                            </flux:text>
                         @endif
 
                         {{-- Stats --}}
@@ -204,59 +177,58 @@
                             <div class="mt-4 flex gap-6">
                                 <div>
                                     <span class="text-2xl font-bold text-green-600 dark:text-green-400">{{ count($comparison['have']) }}</span>
-                                    <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">have</span>
+                                    <flux:text size="sm" class="ml-1 text-zinc-500 dark:text-zinc-400">{{ __('have') }}</flux:text>
                                 </div>
                                 <div>
                                     <span class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ count($comparison['missing']) }}</span>
-                                    <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">missing</span>
+                                    <flux:text size="sm" class="ml-1 text-zinc-500 dark:text-zinc-400">{{ __('missing') }}</flux:text>
                                 </div>
                                 <div>
                                     <span class="text-2xl font-bold text-blue-500 dark:text-blue-400">{{ count($comparison['upcoming']) }}</span>
-                                    <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">upcoming</span>
+                                    <flux:text size="sm" class="ml-1 text-zinc-500 dark:text-zinc-400">{{ __('upcoming') }}</flux:text>
                                 </div>
                                 @if(count($comparison['unparseable']) > 0)
                                     <div>
-                                        <span class="text-2xl font-bold text-gray-400">{{ count($comparison['unparseable']) }}</span>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">unparsed</span>
+                                        <span class="text-2xl font-bold text-zinc-400">{{ count($comparison['unparseable']) }}</span>
+                                        <flux:text size="sm" class="ml-1 text-zinc-500 dark:text-zinc-400">{{ __('unparsed') }}</flux:text>
                                     </div>
                                 @endif
                             </div>
                         @endif
                     </div>
                 </div>
-            </div>
+            </flux:card>
         @endif
 
         {{-- Episodes by Season (TMDB comparison) --}}
         @if(count($episodesBySeason) > 0)
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Episodes</h3>
-                @if(count($this->getMissingSeasons()) > 0)
-                    <button
-                        wire:click="createAllMissingSeasons"
-                        type="button"
-                        class="inline-flex items-center px-3 py-1.5 border border-dashed border-gray-400 dark:border-gray-500 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:border-gray-600 dark:hover:border-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
-                    >
-                        <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Create all missing seasons
-                    </button>
-                @endif
-                @if(count($existingSeasonFolders) > 0)
-                    <button
-                        wire:click="renameSeries"
-                        wire:loading.attr="disabled"
-                        type="button"
-                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-                    >
-                        <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Rename Files
-                    </button>
-                @endif
+            <div class="mb-3 flex items-center justify-between">
+                <flux:heading size="lg">{{ __('Episodes') }}</flux:heading>
+                <div class="flex gap-2">
+                    @if(count($this->getMissingSeasons()) > 0)
+                        <flux:button
+                            size="sm"
+                            variant="outline"
+                            icon="plus"
+                            wire:click="createAllMissingSeasons"
+                        >
+                            {{ __('Create all missing seasons') }}
+                        </flux:button>
+                    @endif
+                    @if(count($existingSeasonFolders) > 0)
+                        <flux:button
+                            size="sm"
+                            variant="primary"
+                            icon="pencil"
+                            wire:click="renameSeries"
+                            wire:loading.attr="disabled"
+                        >
+                            {{ __('Rename Files') }}
+                        </flux:button>
+                    @endif
+                </div>
             </div>
+
             @foreach($episodesBySeason as $season => $episodes)
                 @php
                     $haveCount = collect($episodes)->where('status', 'have')->count();
@@ -269,124 +241,117 @@
                     <button
                         wire:click="toggleSeason({{ $season }})"
                         type="button"
-                        class="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 shadow rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        class="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                     >
                         <div class="flex items-center gap-3">
-                            <svg
-                                class="h-5 w-5 text-gray-500 transition-transform duration-200 {{ $isOpen ? 'rotate-90' : '' }}"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            >
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                            <span class="font-medium text-gray-900 dark:text-white">Season {{ $season }}</span>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">
-                                ({{ $haveCount }}/{{ $totalCount }} downloaded)
-                            </span>
+                            <flux:icon
+                                name="chevron-right"
+                                class="size-5 shrink-0 text-zinc-500 transition-transform duration-200 {{ $isOpen ? 'rotate-90' : '' }}"
+                            />
+                            <flux:heading size="sm">{{ __('Season') }} {{ $season }}</flux:heading>
+                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                ({{ $haveCount }}/{{ $totalCount }} {{ __('downloaded') }})
+                            </flux:text>
                         </div>
                         <div class="flex items-center gap-2">
                             @if(isset($customNames[$season]) && $customNames[$season])
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                                    Using: {{ $customNames[$season] }}
-                                    <button wire:click="resetCustomName({{ $season }})" type="button" class="ml-0.5 hover:text-purple-900 dark:hover:text-purple-200" title="Reset to default names">
-                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </span>
+                                <flux:badge size="sm" color="purple">
+                                    {{ __('Using:') }} {{ $customNames[$season] }}
+                                    <flux:button
+                                        variant="ghost"
+                                        size="sm"
+                                        inset
+                                        wire:click="resetCustomName({{ $season }})"
+                                        title="{{ __('Reset to default names') }}"
+                                    >
+                                        <flux:icon name="x-mark" class="size-3" />
+                                    </flux:button>
+                                </flux:badge>
                             @endif
                             @if($haveCount === $totalCount)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                    Complete
-                                </span>
+                                <flux:badge size="sm" color="green">{{ __('Complete') }}</flux:badge>
                             @else
-                                <button
+                                <flux:button
+                                    size="xs"
+                                    variant="outline"
+                                    icon="magnifying-glass"
                                     wire:click="searchNyaaForSeason({{ $season }})"
                                     wire:loading.attr="disabled"
                                     wire:loading.class="opacity-50"
-                                    type="button"
-                                    class="inline-flex items-center px-2 py-0.5 border border-blue-300 dark:border-blue-600 rounded text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors disabled:cursor-not-allowed"
-                                    title="Search all missing episodes on Nyaa"
+                                    title="{{ __('Search all missing episodes on Nyaa') }}"
                                 >
-                                    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    Search Missing
-                                </button>
+                                    {{ __('Search Missing') }}
+                                </flux:button>
                             @endif
                         </div>
                     </button>
 
                     {{-- Episodes list --}}
                     @if($isOpen)
-                        <div class="mt-2 bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
+                        <flux:card class="mt-2 overflow-hidden p-0">
                             @if(! $folderExists)
-                                <div class="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                        </svg>
-                                        <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Season {{ $season }} directory is missing</span>
+                                <flux:callout variant="warning" icon="exclamation-triangle" class="border-b border-amber-200 dark:border-amber-800">
+                                    <div class="flex items-center justify-between">
+                                        <flux:callout.text>
+                                            {{ __('Season :season: directory is missing', ['season' => $season]) }}
+                                        </flux:callout.text>
+                                        <flux:button
+                                            size="sm"
+                                            variant="outline"
+                                            icon="plus"
+                                            wire:click="createSeasonFolder({{ $season }})"
+                                        >
+                                            {{ __('Create folder') }}
+                                        </flux:button>
                                     </div>
-                                    <button
-                                        wire:click="createSeasonFolder({{ $season }})"
-                                        type="button"
-                                        class="inline-flex items-center px-3 py-1 border border-amber-400 dark:border-amber-500 rounded text-sm font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-800/50 transition-colors"
-                                    >
-                                        <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                        Create folder
-                                    </button>
-                                </div>
+                                </flux:callout>
                             @endif
-                            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+
+                            <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
                                 @foreach($episodes as $ep)
-                                    <li class="px-4 py-3 {{ $ep['status'] === 'have' ? 'bg-green-50 dark:bg-green-900/10' : ($ep['status'] === 'upcoming' ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-amber-50 dark:bg-amber-900/10') }}">
+                                    <div class="px-4 py-3 {{ $ep['status'] === 'have' ? 'bg-green-50 dark:bg-green-900/10' : ($ep['status'] === 'upcoming' ? 'bg-zinc-50 dark:bg-zinc-800/50' : 'bg-amber-50 dark:bg-amber-900/10') }}">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center gap-3">
                                                 @if($ep['status'] === 'have')
-                                                    <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                    </svg>
+                                                    <flux:icon name="check-circle" class="size-5 text-green-600 dark:text-green-400" />
                                                 @elseif($ep['status'] === 'upcoming')
-                                                    <svg class="h-5 w-5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
+                                                    <flux:icon name="calendar" class="size-5 text-blue-500 dark:text-blue-400" />
                                                 @else
-                                                    <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                                    </svg>
+                                                    <flux:icon name="exclamation-triangle" class="size-5 text-amber-600 dark:text-amber-400" />
                                                 @endif
                                                 <div>
-                                                    <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                                        E{{ str_pad($ep['episode'], 2, '0', STR_PAD_LEFT) }}
-                                                    </span>
+                                                    <flux:text size="sm" class="font-medium">
+                                                        E{{ str_pad((string) $ep['episode'], 2, '0', STR_PAD_LEFT) }}
+                                                    </flux:text>
                                                     @if($ep['name'])
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400 ml-2">— {{ $ep['name'] }}</span>
+                                                        <flux:text size="sm" class="ml-2 text-zinc-500 dark:text-zinc-400">
+                                                            — {{ $ep['name'] }}
+                                                        </flux:text>
                                                     @endif
                                                     @if($ep['status'] === 'upcoming' && $ep['air_date'])
-                                                        <span class="text-xs text-blue-500 dark:text-blue-400 ml-2">airs {{ $ep['air_date'] }}</span>
+                                                        <flux:text size="xs" class="ml-2 text-blue-500 dark:text-blue-400">
+                                                            {{ __('airs') }} {{ $ep['air_date'] }}
+                                                        </flux:text>
                                                     @endif
                                                 </div>
                                             </div>
                                             @if($ep['filename'])
-                                                <span class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-[200px]" title="{{ $ep['filename'] }}">
+                                                <flux:text size="xs" class="max-w-[200px] truncate text-zinc-400 dark:text-zinc-500" title="{{ $ep['filename'] }}">
                                                     {{ $ep['filename'] }}
-                                                </span>
+                                                </flux:text>
                                             @elseif($ep['status'] === 'missing')
-                                                <button
+                                                <flux:button
+                                                    size="xs"
+                                                    variant="outline"
+                                                    icon="magnifying-glass"
                                                     wire:click="searchNyaaForEpisode({{ $season }}, {{ $ep['episode'] }})"
                                                     wire:loading.attr="disabled"
-                                                    type="button"
-                                                    class="inline-flex items-center px-2 py-0.5 border border-blue-300 dark:border-blue-600 rounded text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors disabled:cursor-not-allowed"
                                                 >
-                                                    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                    </svg>
-                                                    Search
-                                                </button>
+                                                    {{ __('Search') }}
+                                                </flux:button>
                                             @endif
                                         </div>
+
                                         {{-- Nyaa results --}}
                                         @php
                                             $nyaaKey = "{$season}_{$ep['episode']}";
@@ -395,51 +360,49 @@
                                         @if($hasResults)
                                             <div class="mt-3 ml-8 space-y-2">
                                                 @foreach($this->nyaaResults[$nyaaKey] as $torrent)
-                                                    <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
-                                                        <div class="flex-1 min-w-0 mr-3">
-                                                            <p class="text-xs font-medium text-gray-900 dark:text-white truncate" title="{{ $torrent['title'] }}">
+                                                    <div class="flex items-center justify-between rounded border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-600 dark:bg-zinc-700/50">
+                                                        <div class="mr-3 min-w-0 flex-1">
+                                                            <flux:text size="xs" class="truncate font-medium" title="{{ $torrent['title'] }}">
                                                                 {{ $torrent['title'] }}
-                                                            </p>
-                                                            <div class="flex items-center gap-2 mt-0.5">
-                                                                <span class="text-xs text-gray-500 dark:text-gray-400">{{ $torrent['size'] }}</span>
-                                                                <span class="text-xs text-green-600 dark:text-green-400">▲ {{ $torrent['seeders'] }}</span>
-                                                                <span class="text-xs text-red-500 dark:text-red-400">▼ {{ $torrent['leechers'] }}</span>
+                                                            </flux:text>
+                                                            <div class="mt-0.5 flex items-center gap-2">
+                                                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">{{ $torrent['size'] }}</flux:text>
+                                                                <flux:text size="xs" class="text-green-600 dark:text-green-400">▲ {{ $torrent['seeders'] }}</flux:text>
+                                                                <flux:text size="xs" class="text-red-500 dark:text-red-400">▼ {{ $torrent['leechers'] }}</flux:text>
                                                                 @if($torrent['trusted'])
-                                                                    <span class="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Trusted</span>
+                                                                    <flux:badge size="xs" color="green">{{ __('Trusted') }}</flux:badge>
                                                                 @endif
                                                             </div>
                                                         </div>
-                                                        <button
-                                                            onclick="navigator.clipboard.writeText('{{ $torrent['magnet'] }}'); Livewire.dispatch('showToast', { message: 'Magnet link copied!', type: 'success' })"
-                                                            type="button"
-                                                            class="flex-shrink-0 inline-flex items-center px-2 py-1 border border-transparent rounded text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors"
-                                                            title="Copy magnet link"
-                                                        >
-                                                            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                                            </svg>
-                                                            Magnet
-                                                        </button>
-                                                        <button
-                                                            wire:click="addToQbittorrent('{{ $torrent['magnet'] }}', {{ $season }})"
-                                                            wire:loading.attr="disabled"
-                                                            type="button"
-                                                            class="flex-shrink-0 inline-flex items-center px-2 py-1 border border-transparent rounded text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50"
-                                                            title="Send to qBittorrent"
-                                                        >
-                                                            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                            </svg>
-                                                            Download
-                                                        </button>
+                                                        <div class="flex shrink-0 gap-1">
+                                                            <flux:button
+                                                                size="xs"
+                                                                variant="outline"
+                                                                icon="link"
+                                                                onclick="navigator.clipboard.writeText('{{ $torrent['magnet'] }}'); Livewire.dispatch('showToast', { message: '{{ __('Magnet link copied!') }}', type: 'success' })"
+                                                                title="{{ __('Copy magnet link') }}"
+                                                            >
+                                                                {{ __('Magnet') }}
+                                                            </flux:button>
+                                                            <flux:button
+                                                                size="xs"
+                                                                variant="primary"
+                                                                icon="arrow-down-tray"
+                                                                wire:click="addToQbittorrent('{{ $torrent['magnet'] }}', {{ $season }})"
+                                                                wire:loading.attr="disabled"
+                                                                title="{{ __('Send to qBittorrent') }}"
+                                                            >
+                                                                {{ __('Download') }}
+                                                            </flux:button>
+                                                        </div>
                                                     </div>
                                                 @endforeach
                                             </div>
                                         @endif
-                                    </li>
+                                    </div>
                                 @endforeach
-                            </ul>
-                        </div>
+                            </div>
+                        </flux:card>
                     @endif
                 </div>
             @endforeach
@@ -447,7 +410,7 @@
 
         {{-- Local files by Season (before TMDB lookup) --}}
         @if(!$tmdb && count($localFilesBySeason) > 0)
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Local Files by Season</h3>
+            <flux:heading size="lg" class="mb-3">{{ __('Local Files by Season') }}</flux:heading>
             @foreach($localFilesBySeason as $season => $files)
                 @php
                     $isOpenLocal = in_array($season, $openSeasons);
@@ -457,46 +420,42 @@
                     <button
                         wire:click="toggleSeason({{ $season }})"
                         type="button"
-                        class="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 shadow rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        class="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                     >
                         <div class="flex items-center gap-3">
-                            <svg
-                                class="h-5 w-5 text-gray-500 transition-transform duration-200 {{ $isOpenLocal ? 'rotate-90' : '' }}"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            >
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                            <span class="font-medium text-gray-900 dark:text-white">
-                                {{ $season === 0 ? 'Unparsed' : 'Season ' . $season }}
-                            </span>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">
-                                ({{ count($files) }} {{ count($files) === 1 ? 'file' : 'files' }})
-                            </span>
+                            <flux:icon
+                                name="chevron-right"
+                                class="size-5 shrink-0 text-zinc-500 transition-transform duration-200 {{ $isOpenLocal ? 'rotate-90' : '' }}"
+                            />
+                            <flux:heading size="sm">
+                                {{ $season === 0 ? __('Unparsed') : __('Season') . ' ' . $season }}
+                            </flux:heading>
+                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                ({{ count($files) }} {{ count($files) === 1 ? __('file') : __('files') }})
+                            </flux:text>
                         </div>
                     </button>
 
                     {{-- Files list --}}
                     @if($isOpenLocal)
-                        <div class="mt-2 bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
-                            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <flux:card class="mt-2 overflow-hidden p-0">
+                            <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
                                 @foreach($files as $file)
-                                    <li class="px-4 py-3">
+                                    <div class="px-4 py-3">
                                         <div class="flex items-center gap-3">
                                             @if($file['parsed'])
-                                                <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                </svg>
+                                                <flux:icon name="check-circle" class="size-5 text-green-600 dark:text-green-400" />
                                             @else
-                                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
+                                                <flux:icon name="question-mark-circle" class="size-5 text-zinc-400" />
                                             @endif
-                                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $file['filename'] }}</span>
+                                            <flux:text size="sm" class="text-zinc-700 dark:text-zinc-300">
+                                                {{ $file['filename'] }}
+                                            </flux:text>
                                         </div>
-                                    </li>
+                                    </div>
                                 @endforeach
-                            </ul>
-                        </div>
+                            </div>
+                        </flux:card>
                     @endif
                 </div>
             @endforeach
