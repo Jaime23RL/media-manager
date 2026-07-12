@@ -1,66 +1,66 @@
 # Media Manager
 
-> **Nota importante:** Esta aplicación ha sido desarrollada completamente con el asistente de inteligencia artificial **OpenCode** (powered by kimi-k2.6). Todo el código, arquitectura, tests y documentación fueron generados mediante iteraciones conversacionales entre el usuario y la IA, sin intervención manual de desarrollo profesional tradicional.
+> **Important note:** This application was developed entirely by the AI assistant **OpenCode** (powered by kimi-k2.6). All code, architecture, tests, and documentation were generated through conversational iterations between the user and the AI, without traditional professional developer intervention.
 
 ---
 
-## ¿Qué es?
+## What is it?
 
-**Media Manager** es una aplicación web para gestionar bibliotecas de anime (y películas). Está diseñada específicamente para el ecosistema de anime porque integra directamente con **nyaa.si** — el tracker de torrents más popular para contenido anime — permitiendo buscar, descargar y organizar capítulos automáticamente.
+**Media Manager** is a web application for managing anime (and movie) libraries. It is specifically designed for the anime ecosystem because it integrates directly with **nyaa.si** — the most popular anime torrent tracker — allowing you to search, download, and organize episodes automatically.
 
-La app escanea tus directorios locales, consulta **The Movie Database (TMDB)** para obtener metadatos de episodios, compara lo que tienes contra lo que existe, y te muestra visualmente qué capítulos te faltan y cuáles ya están descargados. Todo desde una interfaz web moderna construida con **Livewire + Flux UI**.
-
----
-
-## Características principales
-
-- **Escaneo automático de bibliotecas** — Detecta archivos de video (`mkv`, `mp4`, `avi`, etc.) en tus carpetas de Animes y Películas.
-- **Metadatos de TMDB** — Obtiene información de episodios (nombre, fecha de emisión, temporada) desde The Movie Database.
-- **Detección de capítulos faltantes** — Cruza tus archivos locales con la lista de episodios de TMDB para mostrarte qué te falta descargar.
-- **Búsqueda integrada en nyaa.si** — Busca torrents directamente desde la app, filtrando por subtitulador (ej. Erai-raws) y calidad (1080p).
-- **Descarga con qBittorrent** — Envía magnet links directamente a tu instancia de qBittorrent con un solo clic.
-- **Renombrado automático** — Cuando un torrent termina de descargarse, qBittorrent ejecuta automáticamente un script Python que renombra los archivos al formato estándar `SerieSXXEXX.ext`.
-- **Caché inteligente** — Los datos de TMDB y nyaa se cachean localmente para evitar llamadas repetidas a APIs externas.
-- **Tests automatizados** — 57+ tests de PHPUnit cubriendo todos los servicios y componentes principales.
+The app scans your local directories, queries **The Movie Database (TMDB)** for episode metadata, compares what you have against what exists, and visually shows you which episodes you are missing and which are already downloaded. All from a modern web interface built with **Livewire + Flux UI**.
 
 ---
 
-## Tecnologías
+## Key Features
 
-| Capa | Tecnología |
+- **Automatic library scanning** — Detects video files (`mkv`, `mp4`, `avi`, etc.) in your Animes and Movies folders.
+- **TMDB metadata** — Fetches episode information (name, air date, season) from The Movie Database.
+- **Missing episode detection** — Cross-references your local files against TMDB's episode list to show what you still need to download.
+- **Integrated nyaa.si search** — Search torrents directly from the app, filtering by fansubber (e.g. Erai-raws) and quality (1080p).
+- **qBittorrent download integration** — Send magnet links directly to your qBittorrent instance with one click.
+- **Automatic renaming** — When a torrent finishes downloading, qBittorrent automatically runs a Python script that renames files to the standard `SeriesNameSXXEXX.ext` format.
+- **Smart caching** — TMDB and nyaa data is cached locally to avoid repeated API calls.
+- **Automated tests** — 57+ PHPUnit tests covering all major services and components.
+
+---
+
+## Technologies
+
+| Layer | Technology |
 |------|-----------|
 | Backend | Laravel 13 (PHP 8.3+) |
 | Frontend | Livewire v4 + Flux UI v2 + Tailwind CSS v4 |
-| Autenticación | Laravel Fortify |
-| Base de datos | SQLite (por defecto) / MariaDB / MySQL |
-| Descargas | qBittorrent Web API |
-| Búsqueda torrents | nyaa.si RSS |
-| Metadatos | TMDB API v3 |
-| Renombrado | Python 3 (script incluido en el repo) |
+| Authentication | Laravel Fortify |
+| Database | SQLite (default) / MariaDB / MySQL |
+| Downloads | qBittorrent Web API |
+| Torrent search | nyaa.si RSS |
+| Metadata | TMDB API v3 |
+| Renaming | Python 3 (script included in repo) |
 
 ---
 
-## Requisitos
+## Requirements
 
-- PHP 8.3 o superior
+- PHP 8.3 or higher
 - Composer
 - Node.js + npm
-- qBittorrent con Web UI habilitada (o qbittorrent-nox)
-- Python 3 (para el script de renombrado automático)
-- (Opcional) MariaDB/MySQL — por defecto usa SQLite
+- qBittorrent with Web UI enabled (or qbittorrent-nox)
+- Python 3 (for the automatic renaming script)
+- (Optional) MariaDB/MySQL — SQLite is used by default
 
 ---
 
-## Instalación
+## Installation
 
-### 1. Clonar el repositorio
+### 1. Clone the repository
 
 ```bash
-git clone <url-del-repo>
+git clone <repo-url>
 cd media-manager
 ```
 
-### 2. Instalar dependencias
+### 2. Install dependencies
 
 ```bash
 composer install
@@ -68,47 +68,47 @@ npm install
 npm run build
 ```
 
-### 3. Configurar el entorno
+### 3. Configure environment
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-Edita el archivo `.env` con tus valores. La sección **Media Manager — Required Variables** es obligatoria. Ver la sección de configuración más abajo para detalles.
+Edit the `.env` file with your values. The **Media Manager — Required Variables** section is mandatory. See the configuration section below for details.
 
-### 4. Crear la base de datos
+### 4. Create the database
 
-Si usas SQLite (por defecto):
+If using SQLite (default):
 
 ```bash
 touch database/database.sqlite
 php artisan migrate
 ```
 
-Si usas MariaDB/MySQL, crea la base de datos manualmente y configura `DB_*` en el `.env`.
+If using MariaDB/MySQL, create the database manually and configure `DB_*` in your `.env`.
 
-### 5. Iniciar el servidor
+### 5. Start the server
 
 ```bash
 php artisan serve
 ```
 
-Abre [http://localhost:8000](http://localhost:8000) en tu navegador.
+Open [http://localhost:8000](http://localhost:8000) in your browser.
 
 ---
 
-## Configuración del `.env`
+## `.env` Configuration
 
-Estas son las variables específicas de Media Manager que debes configurar obligatoriamente:
+These are the Media Manager-specific variables you must configure:
 
 ```dotenv
-# TMDB API — Obligatorio para metadatos de episodios
-# Regístrate gratis en https://www.themoviedb.org/settings/api
+# TMDB API — Required for episode metadata
+# Register for free at https://www.themoviedb.org/settings/api
 TMDB_API_KEY=your_tmdb_api_key_here
-TMDB_LANGUAGE=es-ES          # Idioma para nombres de episodios
+TMDB_LANGUAGE=es-ES          # Language for episode names
 
-# Rutas de tu biblioteca local
+# Paths to your local media library
 MEDIA_ANIMES_PATH=/home/user/Media/Animes
 MEDIA_PELICULAS_PATH=/home/user/Media/Peliculas
 
@@ -117,31 +117,31 @@ QBITTORRENT_URL=http://localhost:8080
 QBITTORRENT_USER=admin
 QBITTORRENT_PASS=adminadmin
 
-# Preferencias de búsqueda en nyaa.si
+# nyaa.si torrent search preferences
 NYAA_BASE_URL=https://nyaa.si
-NYAA_DEFAULT_SUBMITTER=Erai-raws    # Fansub preferido
-NYAA_DEFAULT_QUALITY=1080p          # Calidad por defecto
-NYAA_CONCURRENCY=5                  # Peticiones paralelas
-NYAA_CACHE_TTL=86400                # Cache en segundos (24h)
+NYAA_DEFAULT_SUBMITTER=Erai-raws    # Preferred fansubber
+NYAA_DEFAULT_QUALITY=1080p          # Default quality
+NYAA_CONCURRENCY=5                  # Parallel requests
+NYAA_CACHE_TTL=86400                # Cache in seconds (24h)
 ```
 
-**Nota:** Si usas qBittorrent Web UI en un puerto no estándar (por ejemplo `23552`), ajusta `QBITTORRENT_URL` acorde.
+**Note:** If you use qBittorrent Web UI on a non-standard port (e.g. `23552`), adjust `QBITTORRENT_URL` accordingly.
 
 ---
 
-## Configuración de qBittorrent
+## qBittorrent Setup
 
-La app interactúa con qBittorrent a través de su **Web UI API**. Necesitas habilitarla:
+The app interacts with qBittorrent through its **Web UI API**. You need to enable it:
 
 ### qBittorrent desktop
-1. Abre qBittorrent → Opciones → Web UI
-2. Activa **Web User Interface**
-3. Establece usuario/contraseña
-4. Asegúrate de que el puerto coincida con `QBITTORRENT_URL` en tu `.env`
+1. Open qBittorrent → Options → Web UI
+2. Enable **Web User Interface**
+3. Set username/password
+4. Make sure the port matches `QBITTORRENT_URL` in your `.env`
 
 ### qbittorrent-nox (headless)
 
-Si prefieres la versión daemon (sin GUI), crea un servicio systemd de usuario:
+If you prefer the daemon version (no GUI), create a user systemd service:
 
 ```ini
 # ~/.config/systemd/user/qbittorrent.service
@@ -163,71 +163,71 @@ systemctl --user daemon-reload
 systemctl --user enable --now qbittorrent.service
 ```
 
-### Renombrado automático al completar descarga
+### Automatic renaming on download completion
 
-En la configuración de qBittorrent, activa **Run external program on torrent completion** y establece:
+In qBittorrent settings, enable **Run external program on torrent completion** and set:
 
 ```
-php /ruta/absoluta/al/proyecto/artisan media:rename "%D"
+php /absolute/path/to/project/artisan media:rename "%D"
 ```
 
-Esto ejecutará el script de renombrado automáticamente cuando un torrent termine de descargarse.
+This will run the renaming script automatically when a torrent finishes downloading.
 
 ---
 
-## Uso
+## Usage
 
-1. **Escanea tu biblioteca** — Ve a la pantalla principal y haz clic en *Rescan* para detectar tus series locales.
-2. **Selecciona una serie** — Aparecerán tus animes detectados. Haz clic en uno para ver los detalles.
-3. **Lookup TMDB** — En la página de detalle, haz clic en *Lookup on TMDB* para obtener los metadatos de episodios.
-4. **Busca torrents** — Para capítulos marcados como "missing", haz clic en *Search nyaa* para buscar torrents directamente.
-5. **Descarga** — Haz clic en *Download* en un resultado de nyaa para enviar el magnet a qBittorrent.
-6. **Renombra automáticamente** — Cuando el torrent termine, qBittorrent ejecutará el script de renombrado. También puedes forzar el renombrado manual desde la página de la serie con el botón *Rename Files*.
+1. **Scan your library** — Go to the main page and click *Rescan* to detect your local series.
+2. **Select a series** — Your detected anime will appear. Click one to view details.
+3. **Lookup TMDB** — On the detail page, click *Lookup on TMDB* to fetch episode metadata.
+4. **Search torrents** — For episodes marked as "missing", click *Search nyaa* to search torrents directly.
+5. **Download** — Click *Download* on a nyaa result to send the magnet to qBittorrent.
+6. **Auto-rename** — When the torrent finishes, qBittorrent will run the renaming script automatically. You can also force manual renaming from the series page with the *Rename Files* button.
 
 ---
 
 ## Tests
 
-El proyecto incluye tests de PHPUnit que cubren todos los servicios principales:
+The project includes PHPUnit tests covering all major services:
 
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 php artisan test --compact
 
-# Ejecutar tests de un archivo específico
+# Run tests for a specific file
 php artisan test --compact tests/Feature/SerieDetailPageTest.php
 ```
 
 ---
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 media-manager/
 ├── app/
-│   ├── Console/Commands/         # Comandos Artisan (media:rename)
-│   ├── Livewire/                 # Componentes Livewire (UI)
-│   ├── Services/                 # Lógica de negocio
-│   │   ├── CompareService.php    # Cruce local vs TMDB
-│   │   ├── NamingService.php     # Parseo de nombres de archivos
-│   │   ├── NyaaService.php       # Búsqueda en nyaa.si
-│   │   ├── QbittorrentService.php # Cliente Web API de qBittorrent
-│   │   ├── RenamerService.php    # Wrapper del script Python
-│   │   ├── ScannerService.php    # Escaneo de directorios
-│   │   └── TmdbService.php       # Cliente TMDB API
+│   ├── Console/Commands/         # Artisan commands (media:rename)
+│   ├── Livewire/                 # Livewire components (UI)
+│   ├── Services/                 # Business logic
+│   │   ├── CompareService.php    # Local vs TMDB cross-reference
+│   │   ├── NamingService.php     # Filename parsing
+│   │   ├── NyaaService.php       # nyaa.si search
+│   │   ├── QbittorrentService.php # qBittorrent Web API client
+│   │   ├── RenamerService.php    # Python script wrapper
+│   │   ├── ScannerService.php    # Directory scanning
+│   │   └── TmdbService.php       # TMDB API client
 │   └── ...
-├── config/media.php              # Configuración de la app
-├── resources/views/              # Vistas Blade + Livewire
-├── tests/Feature/                # Tests de funcionalidad
-└── .env.example                  # Variables de entorno de ejemplo
+├── config/media.php              # App configuration
+├── resources/views/              # Blade + Livewire views
+├── tests/Feature/                # Feature tests
+└── .env.example                  # Example environment variables
 ```
 
 ---
 
-## Licencia
+## License
 
 MIT
 
 ---
 
-> **Disclaimer:** Como se indica al inicio, esta aplicación fue construida íntegramente mediante interacción con un asistente de IA. El código ha sido probado con tests automatizados, pero al igual que cualquier software, puede contener errores. Úsala bajo tu propia responsabilidad.
+> **Disclaimer:** As stated at the beginning, this application was built entirely through interaction with an AI assistant. The code has been tested with automated tests, but like any software, it may contain bugs. Use it at your own risk.
