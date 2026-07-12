@@ -238,10 +238,11 @@
                 @endphp
                 <div class="mb-4">
                     {{-- Season header --}}
-                    <button
+                    <div
+                        role="button"
+                        tabindex="0"
                         wire:click="toggleSeason({{ $season }})"
-                        type="button"
-                        class="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                        class="flex w-full cursor-pointer items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                     >
                         <div class="flex items-center gap-3">
                             <flux:icon
@@ -253,7 +254,7 @@
                                 ({{ $haveCount }}/{{ $totalCount }} {{ __('downloaded') }})
                             </flux:text>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2" wire:click.stop>
                             @if(isset($customNames[$season]) && $customNames[$season])
                                 <flux:badge size="sm" color="purple">
                                     {{ __('Using:') }} {{ $customNames[$season] }}
@@ -284,7 +285,7 @@
                                 </flux:button>
                             @endif
                         </div>
-                    </button>
+                    </div>
 
                     {{-- Episodes list --}}
                     @if($isOpen)
@@ -417,10 +418,11 @@
                 @endphp
                 <div class="mb-4">
                     {{-- Season header --}}
-                    <button
+                    <div
+                        role="button"
+                        tabindex="0"
                         wire:click="toggleSeason({{ $season }})"
-                        type="button"
-                        class="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                        class="flex w-full cursor-pointer items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                     >
                         <div class="flex items-center gap-3">
                             <flux:icon
@@ -434,7 +436,7 @@
                                 ({{ count($files) }} {{ count($files) === 1 ? __('file') : __('files') }})
                             </flux:text>
                         </div>
-                    </button>
+                    </div>
 
                     {{-- Files list --}}
                     @if($isOpenLocal)
