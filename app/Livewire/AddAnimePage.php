@@ -94,8 +94,13 @@ class AddAnimePage extends Component
         }
 
         // Search Jikan for romaji
-        $jikan = app(JikanService::class);
-        $jikanResult = $jikan->searchByName($this->selectedSerie['name']);
+        $jikanResult = null;
+        try {
+            $jikan = app(JikanService::class);
+            $jikanResult = $jikan->searchByName($this->selectedSerie['name']);
+        } catch (\Exception $e) {
+            $jikanResult = null;
+        }
 
         if ($jikanResult) {
             $romaji = $jikanResult['title'] ?? '';

@@ -51,7 +51,7 @@ class JikanService
             'url' => "{$this->baseUrl}/anime?q=".urlencode($query).'&limit=5',
         ];
 
-        $response = Http::retry(2, 1000)->get("{$this->baseUrl}/anime", [
+        $response = Http::retry(2, 1000, null, false)->get("{$this->baseUrl}/anime", [
             'q' => $query,
             'limit' => 5,
         ]);
